@@ -403,9 +403,4 @@ void PFH::preInit() {
         waitAndExecArray.emplace_back(std::make_shared<waitAndExecHandler>(it[0], it[1], it[2]));
     }
     waitAndExecArrayIsSorted = false;
-
-
-
-
-
 }

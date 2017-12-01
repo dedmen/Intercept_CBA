@@ -8,4 +8,11 @@ namespace EventHandlers {
         static void preStart();
         static void preInit();
     };
+
+    class PlayerEH {
+    public:
+        static void preStart();
+        static void preInit();
+    };
+
 }
