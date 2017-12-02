@@ -319,5 +319,8 @@ void Utility::preStart() {
     }, GameDataType::OBJECT);
 
     static auto _FastForEach = host::registerFunction(u8"FastForEach"sv, "", FastForEach, GameDataType::NOTHING, GameDataType::ARRAY, GameDataType::CODE);
-
+    
+    static auto _currentUnit = host::registerFunction("textNull"sv, "test \"\""sv, [](uintptr_t) -> game_value {
+        return sqf::text("");
+    }, GameDataType::TEXT);
 }
