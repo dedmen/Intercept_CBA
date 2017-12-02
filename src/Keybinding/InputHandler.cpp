@@ -261,9 +261,48 @@ const std::array<bool, 256>& Keyboard::getKeyStates() {
 
 Joystick::Joystick(std::string name_, std::string guid_, IDirectInputDevice8A* device_) : name(name_), guid(guid_), device(device_) {}
 
+
+BOOL FAR PASCAL DIEnumDeviceObjectsCallback(
+    LPCDIDEVICEOBJECTINSTANCEA lpddoi,
+    LPVOID pvRef
+) {
+    static_cast<Joystick*>(pvRef);
+
+
+    return DIENUM_CONTINUE;
+}
+
+#include <XInput.h>
+#pragma comment(lib, "Xinput.lib")
 void Joystick::initialize() {
     auto ret = device->SetCooperativeLevel(ArmaHwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
     ret = device->SetDataFormat(&c_dfDIJoystick);
+    //device->EnumObjects(DIEnumDeviceObjectsCallback, this, DIDFT_ALL);
+
+    //DIDEVICEOBJECTDATA dat{};
+    //DWORD datC = 1;
+    //dat.dwOfs = DIDFT_GETINSTANCE(0x10001180);
+    //dat.dwData = 0xFF;
+    //device->Acquire();
+    //
+    //ret = device->SendDeviceData(sizeof(DIDEVICEOBJECTDATA), &dat, &datC, 0);
+
+
+    XINPUT_VIBRATION vibration;
+    ZeroMemory(&vibration, sizeof(XINPUT_VIBRATION));
+    vibration.wLeftMotorSpeed = 32000; // use any value between 0-65535 here
+    vibration.wRightMotorSpeed = 16000; // use any value between 0-65535 here
+    XInputSetState(0, &vibration);
+    XInputSetState(1, &vibration);
+    XInputSetState(2, &vibration);
+    XInputSetState(3, &vibration);
+    std::this_thread::sleep_for(1s);
+    vibration.wLeftMotorSpeed = 0; // use any value between 0-65535 here
+    vibration.wRightMotorSpeed = 0; // use any value between 0-65535 here
+    XInputSetState(0, &vibration);
+    XInputSetState(1, &vibration);
+    XInputSetState(2, &vibration);
+    XInputSetState(3, &vibration);
 
     //DIDEVCAPS caps{};
     //caps.dwSize = sizeof(caps);
@@ -292,7 +331,7 @@ bool Joystick::poll() {
     }
 
 
-    povDirection = diJoyState.rgdwPOV[0]/100;
+    povDirection = diJoyState.rgdwPOV[0] / 100;
     if (diJoyState.rgdwPOV[0] == 0xFFFFFFFF) povDirection = -1;
 
     for (int i = 0; i < 32; ++i) {
@@ -332,20 +371,18 @@ void InputHandler::addJoystick(std::shared_ptr<Joystick> move_) {
 
 void InputHandler::fireEvents() {
     std::map<std::shared_ptr<Joystick>, std::array<bool, 32>> previousButtons;
-    std::map<std::shared_ptr<Joystick>, uint16_t> previousPOV;
+    std::map<std::shared_ptr<Joystick>, int16_t> previousPOV;
     for (auto& j : getJoysticks()) {
         previousButtons.insert({ j, j->getKeyStates() });
         previousPOV.insert({ j, j->getPOV() });
     }
     std::map<std::shared_ptr<Joystick>, std::array<bool, 32>> nowButtons;
-    std::map<std::shared_ptr<Joystick>, uint16_t> nowPOV;
+    std::map<std::shared_ptr<Joystick>, int16_t> nowPOV;
     for (auto& j : getJoysticks()) {
         if (j->poll()) {
             nowButtons.insert({ j, j->getKeyStates() });
             nowPOV.insert({ j, j->getPOV() });
-
         }
-            
     }
 
     struct keyEvent {
@@ -353,7 +390,6 @@ void InputHandler::fireEvents() {
         std::shared_ptr<Joystick> joy;
         uint32_t buttonID;
     };
-
 
     std::vector<keyEvent> events;
     auto localevt = sqf::get_variable(sqf::mission_namespace(), "CBA_fnc_localEvent");
@@ -367,9 +403,9 @@ void InputHandler::fireEvents() {
 
 
         for (uint32_t i = 0; i < previous.size(); ++i) {
-             if (now[i] != previous[i]) {
-                 events.emplace_back(keyEvent{ now[i], it.first, i });
-             }
+            if (now[i] != previous[i]) {
+                events.emplace_back(keyEvent{ now[i], it.first, i });
+            }
         }
 
         if (previouspov != nowpov) {
@@ -378,10 +414,7 @@ void InputHandler::fireEvents() {
             intercept::sqf::system_chat(message);
             intercept::sqf::diag_log(message);
 
-
             sqf::call(localevt, { "CBA_Keybinds_JoyPOVChanged"sv ,{ it.first->getName() ,(int) nowpov } });
-
-
         }
 
     }

@@ -6,7 +6,7 @@ import subprocess
 
 ######## GLOBALS #########
 MAINPREFIX = "z"
-PREFIX = "intercept-examples_"
+PREFIX = ""
 ##########################
 
 def mod_time(path):
