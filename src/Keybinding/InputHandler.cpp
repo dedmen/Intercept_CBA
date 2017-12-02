@@ -394,6 +394,8 @@ void InputHandler::fireEvents() {
         intercept::sqf::system_chat(message);
         intercept::sqf::diag_log(message);
 
+        sqf::call(localevt, { evt.pressed ? "CBA_Keybinds_JoyPressed"sv : "CBA_Keybinds_JoyReleased"sv,{ evt.joy->getName() ,(int) evt.buttonID } });
+
     }
 }
 
