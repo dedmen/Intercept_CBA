@@ -11,6 +11,7 @@ void PFH::preStart() {
 }
 
 void swapFuncs(game_value orig, game_value newCode) {
+    return;
     auto c = static_cast<game_data_code*>(orig.data.get());
 
     auto nc = static_cast<game_data_code*>(newCode.data.get());

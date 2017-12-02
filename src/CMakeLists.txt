@@ -31,6 +31,10 @@ SOURCE_GROUP("src/SQFExtension" FILES ${INTERCEPT_CBA_SQF_EXT_SOURCES})
 file(GLOB INTERCEPT_CBA_EVENTHANDLERS_SOURCES "Eventhandlers/*.cpp" "Eventhandlers/*.hpp" "Eventhandlers/*.h")
 SOURCE_GROUP("src/Eventhandlers" FILES ${INTERCEPT_CBA_EVENTHANDLERS_SOURCES})
 
+file(GLOB INTERCEPT_CBA_Keybinding_SOURCES "Keybinding/*.cpp" "Keybinding/*.hpp" "Keybinding/*.h")
+SOURCE_GROUP("src/Keybinding" FILES ${INTERCEPT_CBA_Keybinding_SOURCES})
+
+
 
 set(library_sources ${INTERCEPT_CBA_SOURCES})
 
@@ -52,7 +56,8 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 	set(CMAKE_SHARED_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
 else()
 	set(CMAKE_CXX_FLAGS_DEBUG "/D _DEBUG /MTd /Zi /Ob0 /Od /RTC1 /MP /EHsc")
-	set(CMAKE_CXX_FLAGS_RELEASE "/MT /Zi /O2 /Ob1 /D /EHsc /MP NDEBUG") #with debug info
+	set(CMAKE_CXX_FLAGS_RELEASE "/MT /Zi /O2 /Ob1 /D /EHsc /MP") #with debug info
+	set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "/OPT:REF /DEBUG:FULL") 
 endif()
 
 
