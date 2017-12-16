@@ -5,11 +5,17 @@ set(INTERCEPT_CLIENT_PATH "${CMAKE_SOURCE_DIR}/intercept/src/client")
 set(INTERCEPT_INCLUDE_PATH "${INTERCEPT_CLIENT_PATH}/headers" "${INTERCEPT_CLIENT_PATH}/headers/client/" "${INTERCEPT_CLIENT_PATH}/headers/client/sqf")
 
 
-set(INTERCEPT_CBA_NAME "intercept-cba")
+if(USE_64BIT_BUILD)
+    set(INTERCEPT_CBA_NAME "intercept-cba_x64")
+else()
+    set(INTERCEPT_CBA_NAME "intercept-cba")
+endif()
+
 
 add_definitions(/DINTERCEPT_NO_THREAD_SAFETY)
 add_definitions(/DNOMINMAX)
 add_definitions(/DINTERCEPT_SQF_STRTYPE_RSTRING)
+add_definitions(/D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS) #No I don't cheat!
 
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/rv/${INTERCEPT_CBA_NAME}/intercept")
 
@@ -47,8 +53,8 @@ target_link_libraries (${INTERCEPT_CBA_NAME} ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(${INTERCEPT_CBA_NAME} ${LINK_LIBS})
 
 target_link_libraries(${INTERCEPT_CBA_NAME} ${LINK_LIBS})
-set_target_properties(${IINTERCEPT_CBA_NAME} PROPERTIES PREFIX "")
-set_target_properties(${IINTERCEPT_CBA_NAME} PROPERTIES FOLDER intercept-cba)
+set_target_properties(${INTERCEPT_CBA_NAME} PROPERTIES PREFIX "")
+set_target_properties(${INTERCEPT_CBA_NAME} PROPERTIES FOLDER intercept-cba)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
 	SET(CMAKE_CXX_FLAGS "-std=c++1z -O2 -s -fPIC -fpermissive -static-libgcc -static-libstdc++")#-march=i686 -m32

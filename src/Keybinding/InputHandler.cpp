@@ -347,13 +347,16 @@ int16_t Joystick::getPOV() { return povDirection; }
 void InputHandler::preStart() {
     mainThreadID = GetCurrentThreadId();
     EnumWindows(EnumWindowsProc, 0);
-
+#ifdef _WIN64 
+    auto handle = GetModuleHandle("intercept-cba_x64");
+#else
     auto handle = GetModuleHandle("intercept-cba");
+#endif // _WIN64
     HRESULT err = DirectInput8Create(
         handle
         , DIRECTINPUT_VERSION, IID_IDirectInput8, (void **) &dInput, NULL
     );
-
+      //#TODO check for valid
     dInput->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoyStickCallback, this, DIEDFL_ATTACHEDONLY);
     dInput->EnumDevices(DI8DEVCLASS_KEYBOARD, EnumKeyboardCallback, this, DIEDFL_ATTACHEDONLY);
 }

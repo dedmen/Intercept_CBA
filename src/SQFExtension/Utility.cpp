@@ -1,5 +1,7 @@
 #include "SQFExtensions.hpp"
 #include <intercept.hpp>
+#include <pointers.hpp>
+#include <future>
 using namespace intercept::client;
 using namespace intercept;
 using namespace SQFExtensions;
@@ -272,6 +274,104 @@ game_value FastForEach(uintptr_t, game_value_parameter left, game_value_paramete
     return {};
 }
 
+game_value surfaceTexture(uintptr_t, game_value_parameter right) {
+    uintptr_t stackBase = 0;
+    auto callSt = [&stackBase](game_value_parameter right) {
+        uintptr_t stackBuf[512];//More stackpushing to make sure our async doesn't touch this 
+        int x;
+        stackBuf[211] = 13;
+        stackBase = reinterpret_cast<uintptr_t>(&x);
+        client::host::functions.invoke_raw_unary(__sqf::unary__surfacetype__array__ret__string, right);
+    };
+    //#ifdef _DEBUG
+    //    //Doesn't work on Debug build because of /RTC and /GS which smaaaash the stack
+    //    return ""; //#TODO proper default value
+    //#endif
+
+    callSt(right);
+    static uintptr_t offset = 0;
+    uintptr_t tx = 0;
+    if (offset) {
+        uintptr_t* ptr = reinterpret_cast<uintptr_t*>(stackBase - offset);
+        tx = *ptr;
+    } else {
+        //New thread to make sure the searching doesn't overwrite the stack
+        auto wt = std::async(std::launch::async, [stackBase, &right]() -> uintptr_t {
+            for (uint32_t i = 0; i < 4096; i += sizeof(uintptr_t)) {
+                uintptr_t* ptr = reinterpret_cast<uintptr_t*>(stackBase - i);
+                MEMORY_BASIC_INFORMATION info;
+
+                //memory alignment check
+                if (!*ptr || *ptr & 0xFF) continue;
+
+                if (!VirtualQuery(reinterpret_cast<void*>(*ptr), &info, sizeof(info))) continue;
+                if (!(info.AllocationProtect & PAGE_READWRITE) || info.State != 0x1000) continue;
+
+                uintptr_t* possibleVtablePtr = reinterpret_cast<uintptr_t*>(*ptr);
+                if (!VirtualQuery(reinterpret_cast<void*>(*possibleVtablePtr), &info, sizeof(info))) continue;
+                if (!(info.AllocationProtect &
+                    (PAGE_READWRITE | PAGE_EXECUTE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_READ)
+                    )
+                    || info.State != 0x1000
+                    ) continue;
+
+                auto dteast = *reinterpret_cast<uint32_t*>((*ptr) + sizeof(uintptr_t));
+                if (dteast == 0 || dteast > 16000) continue;//Refcount
+
+                uintptr_t* vtable = reinterpret_cast<uintptr_t*>(*possibleVtablePtr);
+                if (!VirtualQuery(reinterpret_cast<void*>(*vtable), &info, sizeof(info))) continue;
+                if (!(info.AllocationProtect &
+                    (PAGE_READWRITE | PAGE_EXECUTE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_READ)
+                    )
+                    || info.State != 0x1000) continue;
+
+                class v1 {
+                    virtual void doStuff() noexcept {}
+                };
+                class v2 : public v1 {
+                    void doStuff() noexcept override {}
+                };
+                v2* v = reinterpret_cast<v2*>(possibleVtablePtr);
+                try {
+                    auto& id = typeid(*v);
+                    if (strcmp(id.raw_name(), ".?AVTextureD3D11@DX11@@") == 0) {
+                        offset = i;
+
+
+                        uintptr_t tx = reinterpret_cast<uintptr_t>(possibleVtablePtr);
+                        auto name = *reinterpret_cast<r_string*>(tx + (0xC * sizeof(uintptr_t)));
+                        auto surfaceInfo = *reinterpret_cast<uintptr_t*>(tx + (0xB * sizeof(uintptr_t)));
+
+                        auto surfType = *reinterpret_cast<r_string*>(surfaceInfo + (0x4 * sizeof(uintptr_t)));
+                        r_string shouldSurfType = client::host::functions.invoke_raw_unary(__sqf::unary__surfacetype__array__ret__string, right);
+
+                        if (surfType != shouldSurfType) continue; //Sometimes there are other textures on the stack
+
+                        return tx;
+                    }
+                }
+                catch (...) {
+                    continue;
+                }
+
+                continue;
+            }
+            return 0;
+        });
+        wt.wait();
+        if (wt.valid())
+            tx = wt.get();
+    }
+    offset = 0; //#TODO remove this. This disables "caching" and is baaad
+    if (tx) {
+        auto name = *reinterpret_cast<r_string*>(tx + (0xC * sizeof(uintptr_t)));
+        return name;
+    }
+
+    return  {};
+}
+
+
 void Utility::preStart() {
 
     static auto _getNumberWithDef = host::registerFunction("getNumber", "", userFunctionWrapper<getNumberWithDef>, GameDataType::SCALAR, GameDataType::ARRAY);
@@ -323,4 +423,6 @@ void Utility::preStart() {
     static auto _textNull = host::registerFunction("textNull"sv, "test \"\""sv, [](uintptr_t) -> game_value {
         return sqf::text("");
     }, GameDataType::TEXT);
+
+    static auto _surfaceTexture = intercept::client::host::registerFunction("surfaceTexture"sv, "Gets the grounds surface texture at given coordinates"sv, surfaceTexture, GameDataType::STRING, GameDataType::ARRAY);
 }
