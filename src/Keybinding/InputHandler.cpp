@@ -4,6 +4,7 @@
 #include <thread>
 #include <string>
 #include <intercept.hpp>
+#include "Common/CapabilityManager.hpp"
 using namespace intercept;
 
 #pragma comment(lib, "dinput8.lib")
@@ -90,8 +91,6 @@ BOOL CALLBACK EnumKeyboardCallback(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef) {
 
     return DIENUM_CONTINUE;
 }
-
-
 
 struct EnumContext {
 
@@ -356,9 +355,10 @@ void InputHandler::preStart() {
         handle
         , DIRECTINPUT_VERSION, IID_IDirectInput8, (void **) &dInput, NULL
     );
-      //#TODO check for valid
+    if (!dInput) return;
     dInput->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoyStickCallback, this, DIEDFL_ATTACHEDONLY);
     dInput->EnumDevices(DI8DEVCLASS_KEYBOARD, EnumKeyboardCallback, this, DIEDFL_ATTACHEDONLY);
+    REGISTER_CAPABILITY(InputHandler);
 }
 
 std::shared_ptr<Keyboard> InputHandler::getKeyboard() { return keyboard; }

@@ -1,6 +1,7 @@
 #include <intercept.hpp>
 #include "SQFExtension/SQFExtensions.hpp"
 #include "Keybinding/InputHandler.hpp"
+#include "Common/CapabilityManager.hpp"
 
 int intercept::api_version() {
     return 1;
@@ -42,21 +43,24 @@ void  intercept::on_frame() {
 
 }
 
-
+//Definitions for global signals
+Signal<void()> Signal_PreStart;
+Signal<void()> Signal_PreInit;
+Signal<void()> Signal_PostInit;
 
 void intercept::pre_start() {
     SQFExtensions::Utility::preStart();
     SQFExtensions::Math::preStart();
     inputHandler.preStart();
-
+    Signal_PreStart();
 }
 
 void  intercept::pre_init() {
-
+    Signal_PreInit();
 }
 
 void intercept::post_init() {
-
+    Signal_PostInit();
 }
 
 void intercept::mission_ended() {

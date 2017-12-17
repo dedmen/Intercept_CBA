@@ -1,5 +1,6 @@
 #include "SQFExtensions.hpp"
 #include <intercept.hpp>
+#include "Common/CapabilityManager.hpp"
 using namespace intercept::client;
 using namespace intercept;
 using namespace SQFExtensions;
@@ -57,8 +58,7 @@ public:
 };
 
 game_data* createGameDataHashMap(param_archive* ar) {
-    //#TODO use armaAlloc
-    auto x = new GameDataHashMap();
+    auto x = rv_allocator<GameDataHashMap>::create_single();
     if (ar)
         x->serialize(*ar);
     return x;
@@ -67,7 +67,7 @@ game_data* createGameDataHashMap(param_archive* ar) {
 
 
 game_value createHashMap() {
-    return game_value(new GameDataHashMap());
+    return game_value(rv_allocator<GameDataHashMap>::create_single());
 }
 
 //#define CBA_HASH_LOG
@@ -196,5 +196,5 @@ void HashMap::preStart() {
     _hashMapGetVarDef = host::registerFunction("getVariable", "", userFunctionWrapper<hashGetVarDef>, GameDataType::ANY, codeType.first, GameDataType::ARRAY);
     _hashMapGetVarStr = host::registerFunction("getVariable", "", userFunctionWrapper<hashGetVarStr>, GameDataType::ANY, codeType.first, GameDataType::STRING);
     _hashMapGetKeyList = host::registerFunction("allVariables", "", userFunctionWrapper<hashGetKeyList>, GameDataType::ARRAY, codeType.first);
-
+    REGISTER_CAPABILITY(HashMap);
 }

@@ -2,6 +2,7 @@
 #include <intercept.hpp>
 #include <pointers.hpp>
 #include <future>
+#include "Common/CapabilityManager.hpp"
 using namespace intercept::client;
 using namespace intercept;
 using namespace SQFExtensions;
@@ -285,7 +286,7 @@ game_value surfaceTexture(uintptr_t, game_value_parameter right) {
     };
     //#ifdef _DEBUG
     //    //Doesn't work on Debug build because of /RTC and /GS which smaaaash the stack
-    //    return ""; //#TODO proper default value
+    //    return {}; //#TODO proper default value
     //#endif
 
     callSt(right);
@@ -368,7 +369,7 @@ game_value surfaceTexture(uintptr_t, game_value_parameter right) {
         return name;
     }
 
-    return  {};
+    return {};
 }
 
 
@@ -425,4 +426,8 @@ void Utility::preStart() {
     }, GameDataType::TEXT);
 
     static auto _surfaceTexture = intercept::client::host::registerFunction("surfaceTexture"sv, "Gets the grounds surface texture at given coordinates"sv, surfaceTexture, GameDataType::STRING, GameDataType::ARRAY);
+    REGISTER_CAPABILITY(surfaceTexture);
+
+
+
 }
