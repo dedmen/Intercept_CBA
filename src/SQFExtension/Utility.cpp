@@ -3,6 +3,7 @@
 #include <pointers.hpp>
 #include <future>
 #include "Common/CapabilityManager.hpp"
+#include <csignal>
 using namespace intercept::client;
 using namespace intercept;
 using namespace SQFExtensions;
@@ -82,7 +83,7 @@ game_value pushFrontUnique(game_value_parameter left_arg, game_value_parameter r
 game_value findCaseInsensitive(game_value_parameter left_arg, game_value_parameter right_arg) {
     bool searchIsString = right_arg.type() == game_data_string::type_def;
     auto& arr = left_arg.to_array();
-    for (int it = 0; it < left_arg.size(); it++) {
+    for (size_t it = 0; it < left_arg.size(); it++) {
         auto& element = arr[it];
         if (searchIsString && element.data && element.type() == game_data_string::type_def) {
             if (static_cast<r_string>(element).compare_case_insensitive(static_cast<r_string>(right_arg).c_str())) return it;
@@ -96,7 +97,7 @@ game_value findCaseInsensitive(game_value_parameter left_arg, game_value_paramet
 game_value inArrayCaseInsensitive(game_value_parameter right_arg, game_value_parameter left_arg) {
     bool searchIsString = right_arg.type() == game_data_string::type_def;
     auto& arr = left_arg.to_array();
-    for (int it = 0; it < left_arg.size(); it++) {
+    for (size_t it = 0; it < left_arg.size(); it++) {
         auto& element = arr[it];
         if (searchIsString && element.data && element.type() == game_data_string::type_def) {
             if (static_cast<r_string>(element).compare_case_insensitive(static_cast<r_string>(right_arg).c_str())) return true;
@@ -275,21 +276,86 @@ game_value FastForEach(uintptr_t, game_value_parameter left, game_value_paramete
     return {};
 }
 
+#pragma optimize( "gts", off )
+#ifdef _MSC_VER
+__declspec(noinline)
+#endif
+uintptr_t surfaceTexture_callST(game_value_parameter right) {
+    uintptr_t stackBuf[512];//More stackpushing to make sure our async doesn't touch this 
+    client::host::functions.invoke_raw_unary(__sqf::unary__surfacetype__array__ret__string, right);
+    stackBuf[211] = 13;
+    return reinterpret_cast<uintptr_t>(&stackBuf[511]);
+}
+
+uintptr_t surfaceTexture_TestOffs(void* armaBase,uintptr_t stackBase, uint32_t i, const char*& rawName) {
+
+    uintptr_t* ptr = reinterpret_cast<uintptr_t*>(stackBase - i);
+    MEMORY_BASIC_INFORMATION info;
+    __try {
+        //memory alignment check
+        if (!*ptr || *ptr & 0xFF) return 0;
+
+        if (!VirtualQuery(reinterpret_cast<void*>(*ptr), &info, sizeof(info))) return 0;
+        if (!(info.AllocationProtect & PAGE_READWRITE) || info.State != 0x1000 || info.Protect & PAGE_GUARD) return 0;
+
+        uintptr_t* possibleVtablePtr = reinterpret_cast<uintptr_t*>(*ptr);
+        if (!possibleVtablePtr) return 0; //not aligned sufficiently
+        if (!VirtualQuery(reinterpret_cast<void*>(*possibleVtablePtr), &info, sizeof(info))) return 0;
+        if (!(info.AllocationProtect &
+            (PAGE_READWRITE | PAGE_EXECUTE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_READ)
+            )
+            || info.State != 0x1000 || info.Protect & PAGE_GUARD
+            ) return 0;
+
+        if (*possibleVtablePtr & 0x3) return 0;
+        auto dteast = *reinterpret_cast<uint32_t*>((*ptr) + sizeof(uintptr_t));
+        if (dteast == 0 || dteast > 16000) return 0;//Refcount
+
+        uintptr_t* vtable = reinterpret_cast<uintptr_t*>(*possibleVtablePtr);
+        if (!vtable || *vtable & 0x3) return 0; //not aligned sufficiently
+        if (!VirtualQuery(reinterpret_cast<void*>(*vtable), &info, sizeof(info))) return 0;
+        if (!(info.AllocationProtect &
+            (PAGE_READWRITE | PAGE_EXECUTE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_READ)
+            )
+            || info.State != 0x1000 || info.Protect & PAGE_GUARD
+            ) return 0;
+        --vtable;//vtable info ptr
+        if (!VirtualQuery(reinterpret_cast<void*>(*vtable), &info, sizeof(info))) return 0;
+        if (!(info.AllocationProtect &
+            (PAGE_READWRITE | PAGE_EXECUTE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_READ)
+            )
+            || info.State != 0x1000 || info.Protect & PAGE_GUARD
+            ) return 0;
+        if (info.AllocationBase != armaBase) return 0;
+
+
+        class v1 {
+            virtual void doStuff() noexcept {}
+        };
+        class v2 : public v1 {
+            void doStuff() noexcept override {}
+        };
+        v2* v = reinterpret_cast<v2*>(possibleVtablePtr);
+        auto& id = typeid(*v);
+        rawName = id.raw_name();
+        return reinterpret_cast<uintptr_t>(possibleVtablePtr);
+    }
+    __except (true) {
+        //__debugbreak();
+    }
+
+    return 0;
+}
+
+
 game_value surfaceTexture(uintptr_t, game_value_parameter right) {
-    uintptr_t stackBase = 0;
-    auto callSt = [&stackBase](game_value_parameter right) {
-        uintptr_t stackBuf[512];//More stackpushing to make sure our async doesn't touch this 
-        int x;
-        stackBuf[211] = 13;
-        stackBase = reinterpret_cast<uintptr_t>(&x);
-        client::host::functions.invoke_raw_unary(__sqf::unary__surfacetype__array__ret__string, right);
-    };
+
     //#ifdef _DEBUG
     //    //Doesn't work on Debug build because of /RTC and /GS which smaaaash the stack
     //    return {}; //#TODO proper default value
     //#endif
 
-    callSt(right);
+    uintptr_t stackBase = surfaceTexture_callST(right);
     static uintptr_t offset = 0;
     uintptr_t tx = 0;
     if (offset) {
@@ -298,64 +364,27 @@ game_value surfaceTexture(uintptr_t, game_value_parameter right) {
     } else {
         //New thread to make sure the searching doesn't overwrite the stack
         auto wt = std::async(std::launch::async, [stackBase, &right]() -> uintptr_t {
-            for (uint32_t i = 0; i < 4096; i += sizeof(uintptr_t)) {
-                uintptr_t* ptr = reinterpret_cast<uintptr_t*>(stackBase - i);
-                MEMORY_BASIC_INFORMATION info;
 
-                //memory alignment check
-                if (!*ptr || *ptr & 0xFF) continue;
+            auto armaBase = GetModuleHandleA(NULL);
 
-                if (!VirtualQuery(reinterpret_cast<void*>(*ptr), &info, sizeof(info))) continue;
-                if (!(info.AllocationProtect & PAGE_READWRITE) || info.State != 0x1000) continue;
+            for (uint32_t i = 0; i < 1024*sizeof(uintptr_t); i += sizeof(uintptr_t)) {
+                
+                const char* rawName = nullptr;
+                uintptr_t tx = surfaceTexture_TestOffs(armaBase, stackBase, i, rawName);
 
-                uintptr_t* possibleVtablePtr = reinterpret_cast<uintptr_t*>(*ptr);
-                if (!VirtualQuery(reinterpret_cast<void*>(*possibleVtablePtr), &info, sizeof(info))) continue;
-                if (!(info.AllocationProtect &
-                    (PAGE_READWRITE | PAGE_EXECUTE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_READ)
-                    )
-                    || info.State != 0x1000
-                    ) continue;
+                if (rawName && tx && strcmp(rawName, ".?AVTextureD3D11@DX11@@") == 0) {
+                    offset = i;
 
-                auto dteast = *reinterpret_cast<uint32_t*>((*ptr) + sizeof(uintptr_t));
-                if (dteast == 0 || dteast > 16000) continue;//Refcount
+                    auto name = *reinterpret_cast<r_string*>(tx + (0xC * sizeof(uintptr_t)));
+                    auto surfaceInfo = *reinterpret_cast<uintptr_t*>(tx + (0xB * sizeof(uintptr_t)));
 
-                uintptr_t* vtable = reinterpret_cast<uintptr_t*>(*possibleVtablePtr);
-                if (!VirtualQuery(reinterpret_cast<void*>(*vtable), &info, sizeof(info))) continue;
-                if (!(info.AllocationProtect &
-                    (PAGE_READWRITE | PAGE_EXECUTE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_READ)
-                    )
-                    || info.State != 0x1000) continue;
+                    auto surfType = *reinterpret_cast<r_string*>(surfaceInfo + (0x4 * sizeof(uintptr_t)));
+                    r_string shouldSurfType = client::host::functions.invoke_raw_unary(__sqf::unary__surfacetype__array__ret__string, right);
 
-                class v1 {
-                    virtual void doStuff() noexcept {}
-                };
-                class v2 : public v1 {
-                    void doStuff() noexcept override {}
-                };
-                v2* v = reinterpret_cast<v2*>(possibleVtablePtr);
-                try {
-                    auto& id = typeid(*v);
-                    if (strcmp(id.raw_name(), ".?AVTextureD3D11@DX11@@") == 0) {
-                        offset = i;
+                    if (surfType != shouldSurfType) continue; //Sometimes there are other textures on the stack
 
-
-                        uintptr_t tx = reinterpret_cast<uintptr_t>(possibleVtablePtr);
-                        auto name = *reinterpret_cast<r_string*>(tx + (0xC * sizeof(uintptr_t)));
-                        auto surfaceInfo = *reinterpret_cast<uintptr_t*>(tx + (0xB * sizeof(uintptr_t)));
-
-                        auto surfType = *reinterpret_cast<r_string*>(surfaceInfo + (0x4 * sizeof(uintptr_t)));
-                        r_string shouldSurfType = client::host::functions.invoke_raw_unary(__sqf::unary__surfacetype__array__ret__string, right);
-
-                        if (surfType != shouldSurfType) continue; //Sometimes there are other textures on the stack
-
-                        return tx;
-                    }
+                    return tx;
                 }
-                catch (...) {
-                    continue;
-                }
-
-                continue;
             }
             return 0;
         });
@@ -371,7 +400,7 @@ game_value surfaceTexture(uintptr_t, game_value_parameter right) {
 
     return {};
 }
-
+#pragma optimize( "", on )
 
 void Utility::preStart() {
 
@@ -420,7 +449,7 @@ void Utility::preStart() {
     }, GameDataType::OBJECT);
 
     static auto _FastForEach = host::registerFunction(u8"FastForEach"sv, "", FastForEach, GameDataType::NOTHING, GameDataType::ARRAY, GameDataType::CODE);
-    
+
     static auto _textNull = host::registerFunction("textNull"sv, "test \"\""sv, [](uintptr_t) -> game_value {
         return sqf::text("");
     }, GameDataType::TEXT);
