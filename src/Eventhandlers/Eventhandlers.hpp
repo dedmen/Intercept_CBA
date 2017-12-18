@@ -29,10 +29,10 @@ namespace EventHandlers {
             float delta;
             float timeAdded;
             game_value args;
-            int handle;
+            uint32_t handle;
             bool del{ false };
 
-            pfh(game_value _1, float _2, float _3, float _4, game_value _5, float _6) {
+            pfh(game_value _1, float _2, float _3, float _4, game_value _5, uint32_t _6) {
                 func = _1;
                 delay = _2;
                 delta = _3;

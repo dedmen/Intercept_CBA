@@ -10,6 +10,8 @@ PFH GPFH;
 
 PFH::PFH() {
 
+    if (!sqf::_has_fast_call()) return; //If we can't be faster than plain SQF then don't even try
+
     REGISTER_CAPABILITY(PFH);
 
     GNativeFunctionManager.registerNativeFunction("cba_common_fnc_onFrame", [this](game_value_parameter) -> game_value {
