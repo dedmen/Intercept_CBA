@@ -1,6 +1,6 @@
 #pragma once
 #include "common.hpp"
-#include <shared/types.hpp>
+#include <intercept.hpp>
 
 namespace EventHandlers {
 
@@ -9,8 +9,9 @@ namespace EventHandlers {
         PFH();
         using game_value = intercept::types::game_value;
 
+        void preStart();
+        void preInit();
         void onFrame();
-        void preInit() const;
         uint32_t addPerFrameHandler(game_value function, float delay, game_value args);
         void removePerFrameHandler(uint32_t handle);
         void execNextFrame(game_value function, game_value args);
@@ -93,9 +94,52 @@ namespace EventHandlers {
 
     class PlayerEH {
     public:
-        static void preStart();
-        static void preInit();
+        PlayerEH();
+
+        enum class eventType {
+            unit,
+            weapon,
+            loadout,
+            vehicle,
+            turret,
+            visionMode,
+            cameraView,
+            visibleMap,
+            group,
+            leader,
+            invalid
+        };
+
+
+        void preStart();
+        void preInit();
+        void onFrame();
+
+        void removePlayerEventHandler(eventType type, uint32_t id);
+        uint32_t addPlayerEventHandler(eventType type, game_value function, bool applyRetroactively);
+
+        //Wrapper for CBA_fnc_localEvent
+        void callEvent(eventType type, game_value args);
+
+        game_value CBA_oldUnit;
+        game_value CBA_oldGroup;
+        game_value CBA_oldLeader;
+        r_string CBA_oldWeapon;
+        game_value CBA_oldLoadout;
+        intercept::sqf::rv_unit_loadout CBA_oldLoadoutNoAmmo;
+        game_value CBA_oldVehicle;
+        game_value CBA_oldTurret;
+        int CBA_oldVisionMode;
+        r_string CBA_oldCameraView;
+        bool CBA_oldVisibleMap;
+
+
+        static eventType typeFromString(const r_string& name);
+        static std::string_view toString(eventType type);
+        std::map<eventType, std::vector<std::pair<uint32_t, game_value>>> handlers;
+        uint32_t nextHandle{0};
     };
+    extern PlayerEH GPlayerEH;
 
     class Events {
     public:

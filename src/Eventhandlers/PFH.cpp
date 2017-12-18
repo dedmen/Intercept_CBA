@@ -10,6 +10,12 @@ PFH GPFH;
 
 PFH::PFH() {
 
+    Signal_PreStart.connect([this]() {
+        preStart();
+    });
+}
+
+void PFH::preStart() {
     if (!sqf::_has_fast_call()) return; //If we can't be faster than plain SQF then don't even try
 
     REGISTER_CAPABILITY(PFH);
@@ -108,10 +114,14 @@ PFH::PFH() {
         return {};
     });
 
-    Signal_PreInit.connect([this]() {
+    Signal_PrePreInit.connect([this]() {
         preInit();
     });
+}
 
+void PFH::preInit() {
+    sqf::set_variable(sqf::mission_namespace(), "CBA_missionTime", 0);
+    PFHHandle = 0;
 }
 
 void PFH::onFrame() {
@@ -208,10 +218,6 @@ void PFH::onFrame() {
             return hand->done;
         }), waitUntilAndExecArray.end());
     }
-}
-
-void PFH::preInit() const {
-    sqf::set_variable(sqf::mission_namespace(), "CBA_missionTime", 0);
 }
 
 uint32_t PFH::addPerFrameHandler(game_value function, float delay, game_value args) {
