@@ -21,6 +21,9 @@ PlayerEH::PlayerEH() {
 
 void PlayerEH::preStart() {
     if (!sqf::_has_fast_call()) return; //If we can't be faster than plain SQF don't try.
+
+    REGISTER_CAPABILITY(PlayerEH);
+
     GNativeFunctionManager.registerNativeFunction("cba_events_fnc_playerEH_EachFrame", [this](game_value_parameter) -> game_value {
         onFrame();
     });
