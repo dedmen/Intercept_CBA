@@ -6,8 +6,8 @@ using namespace EventHandlers;
 Events GEvents;
 
 Events::Events() {
-      GNativeFunctionManager.registerNativeFunction("MyTestFunctin",[](game_value_parameter) -> game_value {
-          return 123;
-      });
+    GNativeFunctionManager.registerNativeFunction("MyTestFunctin", [](game_value_parameter) -> game_value {
+        return 123;
+    });
 }
 

@@ -24,6 +24,7 @@ void PlayerEH::preStart() {
     GNativeFunctionManager.registerNativeFunction("cba_events_fnc_playerEH_EachFrame", [this](game_value_parameter) -> game_value {
         onFrame();
     });
+
     GNativeFunctionManager.registerNativeFunction("cba_events_fnc_playerEH_Map", [this](game_value_parameter data) -> game_value {
         if (CBA_oldVisibleMap != static_cast<bool>(data)) {
             CBA_oldVisibleMap = data;
@@ -55,6 +56,7 @@ void PlayerEH::preStart() {
         removePlayerEventHandler(typeEnum, static_cast<float>(*id));
         return {};
     });
+
     Signal_PrePreInit.connect([this]() {
         preInit();
     });
@@ -97,7 +99,7 @@ void PlayerEH::onFrame() {
             CBA_oldGroup = _data;
         }
     }
-    
+
     if (!handlers[eventType::leader].empty()) {
         game_value _data = sqf::leader(_player);
         if (_data != CBA_oldLeader) {
@@ -105,7 +107,7 @@ void PlayerEH::onFrame() {
             CBA_oldLeader = _data;
         }
     }
-   
+
     if (!handlers[eventType::weapon].empty()) {
         game_value _data = sqf::current_weapon(_player);
         if (_data != CBA_oldWeapon) {
@@ -113,7 +115,7 @@ void PlayerEH::onFrame() {
             callEvent(eventType::weapon, { _player , _data });
         }
     }
-    
+
     if (!handlers[eventType::loadout].empty()) {
         game_value _data = sqf::get_unit_loadout(_player);
         if (_data != CBA_oldLoadout) {
@@ -176,7 +178,7 @@ void PlayerEH::onFrame() {
 
 void PlayerEH::removePlayerEventHandler(eventType type, uint32_t id) {
     auto& vec = handlers[type];
-    vec.erase(std::remove_if(vec.begin(), vec.end(),[id](auto& it) {
+    vec.erase(std::remove_if(vec.begin(), vec.end(), [id](auto& it) {
         return it.first == id;
     }), vec.end());
 }
@@ -188,32 +190,32 @@ uint32_t PlayerEH::addPlayerEventHandler(eventType type, game_value function, bo
             case eventType::unit:
                 sqf::call(function, { CBA_oldUnit , sqf::obj_null() });
                 break;
-            case eventType::weapon: 
-            sqf::call(function, { CBA_oldUnit , sqf::current_weapon(CBA_oldUnit) });
+            case eventType::weapon:
+                sqf::call(function, { CBA_oldUnit , sqf::current_weapon(CBA_oldUnit) });
                 break;
-            case eventType::loadout: 
-            sqf::call(function, { CBA_oldUnit , sqf::get_unit_loadout(static_cast<object>(CBA_oldUnit)) });
+            case eventType::loadout:
+                sqf::call(function, { CBA_oldUnit , sqf::get_unit_loadout(static_cast<object>(CBA_oldUnit)) });
                 break;
-            case eventType::vehicle: 
-            sqf::call(function, { CBA_oldUnit , sqf::vehicle(CBA_oldUnit) });
+            case eventType::vehicle:
+                sqf::call(function, { CBA_oldUnit , sqf::vehicle(CBA_oldUnit) });
                 break;
-            case eventType::turret:  
-            sqf::call(function, { CBA_oldUnit , turretPath(CBA_oldUnit) });
+            case eventType::turret:
+                sqf::call(function, { CBA_oldUnit , turretPath(CBA_oldUnit) });
                 break;
-            case eventType::visionMode:  
-            sqf::call(function, { CBA_oldUnit , sqf::current_vision_mode(CBA_oldUnit) });
+            case eventType::visionMode:
+                sqf::call(function, { CBA_oldUnit , sqf::current_vision_mode(CBA_oldUnit) });
                 break;
-            case eventType::cameraView:  
-            sqf::call(function, { CBA_oldUnit , sqf::camera_view() });
+            case eventType::cameraView:
+                sqf::call(function, { CBA_oldUnit , sqf::camera_view() });
                 break;
-            case eventType::visibleMap:  
-            sqf::call(function, { CBA_oldUnit , sqf::visible_map() });
+            case eventType::visibleMap:
+                sqf::call(function, { CBA_oldUnit , sqf::visible_map() });
                 break;
-            case eventType::group:  
-            sqf::call(function, { CBA_oldUnit , sqf::group_get(CBA_oldUnit) });
+            case eventType::group:
+                sqf::call(function, { CBA_oldUnit , sqf::group_get(CBA_oldUnit) });
                 break;
-            case eventType::leader:  
-            sqf::call(function, { CBA_oldUnit ,  sqf::group_get(CBA_oldUnit) });
+            case eventType::leader:
+                sqf::call(function, { CBA_oldUnit , sqf::group_get(CBA_oldUnit) });
                 break;
             default:;
         }

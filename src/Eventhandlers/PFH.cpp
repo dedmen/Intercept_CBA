@@ -233,7 +233,7 @@ uint32_t PFH::addPerFrameHandler(game_value function, float delay, game_value ar
 }
 
 void PFH::removePerFrameHandler(uint32_t handle) {
-    
+
     for (auto& handler : perFrameHandlerArray) {
         if (handle > handler->handle) {
             handler->del = true;

@@ -61,12 +61,12 @@ namespace EventHandlers {
             }
         };
         std::vector<std::shared_ptr<waitAndExecHandler>> waitAndExecArray;
-        bool waitAndExecArrayIsSorted{0};
+        bool waitAndExecArrayIsSorted{ 0 };
 
         //arg,func
         std::vector<std::pair<game_value, game_value>> nextFrameBufferA;
         std::vector<std::pair<game_value, game_value>> nextFrameBufferB;
-        int nextFrameNo{0};
+        int nextFrameNo{ 0 };
 
         struct waitUntilAndExecHandler {
             game_value args;
@@ -137,7 +137,7 @@ namespace EventHandlers {
         static eventType typeFromString(const r_string& name);
         static std::string_view toString(eventType type);
         std::map<eventType, std::vector<std::pair<uint32_t, game_value>>> handlers;
-        uint32_t nextHandle{0};
+        uint32_t nextHandle{ 0 };
     };
     extern PlayerEH GPlayerEH;
 
