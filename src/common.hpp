@@ -65,4 +65,5 @@ private:
 
 extern Signal<void()> Signal_PreStart;
 extern Signal<void()> Signal_PreInit;
+extern Signal<void()> Signal_PrePreInit;
 extern Signal<void()> Signal_PostInit;

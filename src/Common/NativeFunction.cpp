@@ -50,14 +50,14 @@ public:
 };
 
 game_data* createGameDataNativeFunction(param_archive* ar) {
-    auto x = rv_allocator<GameDataNativeFunction>::create_single();
+    auto x = new GameDataNativeFunction();
     if (ar)
         x->serialize(*ar);
     return x;
 }
 
-game_value createHashMap(std::string_view name, NativeFunctionManager::functionType func) {
-    return game_value(rv_allocator<GameDataNativeFunction>::create_single(name, std::move(func)));
+game_value createNativeFunction(std::string_view name, NativeFunctionManager::functionType func) {
+    return game_value(new GameDataNativeFunction(name, std::move(func)));
 }
 
 NativeFunctionManager::NativeFunctionManager() {
@@ -98,13 +98,13 @@ NativeFunctionManager::NativeFunctionManager() {
 
 
         for (auto& it : registeredFunctions) {
-            sqf::set_variable(sqf::ui_namespace(), it.first, createHashMap(it.first, it.second));
+            sqf::set_variable(sqf::ui_namespace(), it.first, createNativeFunction(it.first, it.second));
         }
     });
 
-     Signal_PreInit.connect([this]() {
+     Signal_PrePreInit.connect([this]() {
          for (auto& it : registeredFunctions) {
-             sqf::set_variable(sqf::mission_namespace(), it.first, createHashMap(it.first, it.second));
+             sqf::set_variable(sqf::mission_namespace(), it.first, createNativeFunction(it.first, it.second));
          }
      });
 }

@@ -58,7 +58,7 @@ public:
 };
 
 game_data* createGameDataHashMap(param_archive* ar) {
-    auto x = rv_allocator<GameDataHashMap>::create_single();
+    auto x = new GameDataHashMap();
     if (ar)
         x->serialize(*ar);
     return x;
@@ -67,7 +67,7 @@ game_data* createGameDataHashMap(param_archive* ar) {
 
 
 game_value createHashMap() {
-    return game_value(rv_allocator<GameDataHashMap>::create_single());
+    return game_value(new GameDataHashMap());
 }
 
 //#define CBA_HASH_LOG

@@ -46,6 +46,7 @@ void  intercept::on_frame() {
 //Definitions for global signals
 Signal<void()> Signal_PreStart;
 Signal<void()> Signal_PreInit;
+Signal<void()> Signal_PrePreInit;
 Signal<void()> Signal_PostInit;
 
 void intercept::pre_start() {
@@ -55,9 +56,14 @@ void intercept::pre_start() {
     Signal_PreStart();
 }
 
-void  intercept::pre_init() {
+void intercept::pre_init() {
     Signal_PreInit();
 }
+
+void intercept::pre_pre_init() {
+    Signal_PrePreInit();
+}
+
 
 void intercept::post_init() {
     Signal_PostInit();
