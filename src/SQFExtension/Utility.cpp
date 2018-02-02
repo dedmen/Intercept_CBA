@@ -8,6 +8,58 @@ using namespace intercept::client;
 using namespace intercept;
 using namespace SQFExtensions;
 
+static sqf_script_type GameDataElseIf_type;
+
+class GameDataElseIf : public game_data {
+
+public:
+    GameDataElseIf() {}
+    void lastRefDeleted() const override { delete this; }
+    const sqf_script_type& type() const override { return GameDataElseIf_type; }
+    ~GameDataElseIf() override {};
+
+    bool get_as_bool() const override { return false; }
+    float get_as_number() const override { return 0.f; }
+    const r_string& get_as_string() const override { static r_string nm("elseIfType"sv); return nm; }
+    game_data* copy() const override { return new GameDataElseIf(*this); } //#TODO make sure this works
+    r_string to_string() const override { return r_string("elseIfType"sv); }
+    //virtual bool equals(const game_data*) const override; //#TODO ?
+    const char* type_as_string() const override { return "elseIfType"; }
+    bool is_nil() const override { return false; }
+    bool can_serialize() override { return true; }//Setting this to false causes a fail in scheduled and global vars
+
+    serialization_return serialize(param_archive& ar) override {
+        game_data::serialize(ar); //BBLAAAAAAHHHH //#TODO implement? maybe?
+
+        return serialization_return::no_error;
+    }
+    struct statement {
+        std::variant<bool, game_value> condition;
+        bool checkCondition() {
+            if (code.is_nil()) return false; //We might not have code if user does 'if this then that elseif this;'
+            if (condition.index() == 0)
+                return std::get<bool>(condition);
+            return sqf::call(std::get<game_value>(condition));
+        }
+        game_value code;
+    };
+    game_value baseCode; //The code from `if COND then CODE elseif othercode...` triggered if the if condition matches
+    std::vector<statement> statements;
+};
+
+game_data* createGameDataElseIf(param_archive* ar) {
+    auto x = new GameDataElseIf();
+    if (ar)
+        x->serialize(*ar);
+    return x;
+}
+
+game_value createElseIf() {
+    return game_value(new GameDataElseIf());
+}
+
+
+
 game_value getNumberWithDef(game_value_parameter right_arg) {
     if (right_arg.size() != 2) return {};
     if (sqf::is_number(right_arg[0]))
@@ -471,4 +523,80 @@ void Utility::preStart() {
             return sqf::call(right[1]);
         return {}; //You passed an array with no code for the else statement? WTF dude?
     }, GameDataType::ANY, GameDataType::BOOL, GameDataType::ARRAY);
+
+
+    //elseif
+
+    auto elseIfType = host::registerType("elseIfType"sv, "elseIfType"sv, "Dis is a elseif type. It elses ifs."sv, "elseIfType"sv, createGameDataElseIf);
+    GameDataElseIf_type = elseIfType.second;
+
+    static auto _boolThenElseIf = host::registerFunction("then"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+        bool triggerFirst = static_cast<bool>(left);
+        auto elseIfT = static_cast<GameDataElseIf*>(right.data.get());
+
+        if (triggerFirst)
+            return sqf::call(elseIfT->baseCode);
+
+        for (auto& stmt : elseIfT->statements) {
+            if (stmt.checkCondition()) {
+                return sqf::call(stmt.code);
+            }
+        }
+        //else code is also in above loop with a 'true' as condition.
+
+        return {};
+    }, GameDataType::ANY, GameDataType::BOOL, elseIfType.first);
+    //#TODO suppport for ifType
+
+    static auto _elseIfCodeBool = host::registerFunction("elif"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+        auto elseIfT = new GameDataElseIf;
+        elseIfT->baseCode = left;
+
+        elseIfT->statements.emplace_back(GameDataElseIf::statement{ static_cast<bool>(right), {} });
+
+        return game_value(elseIfT);
+    }, elseIfType.first, GameDataType::CODE, GameDataType::BOOL);
+
+
+    static auto _elseIfElseIfBool = host::registerFunction("elif"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+        auto elseIfT = static_cast<GameDataElseIf*>(left.data.get());
+
+        elseIfT->statements.emplace_back(GameDataElseIf::statement{ static_cast<bool>(right), {} });
+
+        return left;
+    }, elseIfType.first, elseIfType.first, GameDataType::BOOL);
+
+    static auto _elseIfCodeCode = host::registerFunction("elif"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+        auto elseIfT = new GameDataElseIf;
+        elseIfT->baseCode = left;
+
+        elseIfT->statements.emplace_back(GameDataElseIf::statement{ right,{} });
+
+        return game_value(elseIfT);
+    }, elseIfType.first, GameDataType::CODE, GameDataType::CODE);
+
+    static auto _elseIfElseIfCode = host::registerFunction("elif"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+        auto elseIfT = static_cast<GameDataElseIf*>(left.data.get());
+
+        elseIfT->statements.emplace_back(GameDataElseIf::statement{ right,{} });
+
+        return left;
+    }, elseIfType.first, elseIfType.first, GameDataType::CODE);
+
+    static auto _elseIfThenCode = host::registerFunction("then"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+        auto elseIfT = static_cast<GameDataElseIf*>(left.data.get());
+
+        //the previous elseif planted the statement condition already
+        elseIfT->statements.back().code = right;
+
+        return left;
+    }, elseIfType.first, elseIfType.first, GameDataType::CODE);
+
+
+    static auto _elseIfElse = host::registerFunction("else"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+        auto elseIfT = static_cast<GameDataElseIf*>(left.data.get());
+        elseIfT->statements.emplace_back(GameDataElseIf::statement{ true,right });
+        return left;
+    }, elseIfType.first, elseIfType.first, GameDataType::CODE);
+    //#TODO elseif needs higher precedence
 }
