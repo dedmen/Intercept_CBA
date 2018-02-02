@@ -458,5 +458,17 @@ void Utility::preStart() {
     REGISTER_CAPABILITY(surfaceTexture);
 
 
+    static auto _boolThenCode = host::registerFunction("then"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+        if (static_cast<bool>(left))
+            return sqf::call(right);
+        return {}; //Ret Nil
+    }, GameDataType::ANY, GameDataType::BOOL, GameDataType::CODE);
 
+    static auto _boolThenArray = host::registerFunction("then"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+        if (static_cast<bool>(left))
+            return sqf::call(right[0]);
+        if (right.size() >= 2)
+            return sqf::call(right[1]);
+        return {}; //You passed an array with no code for the else statement? WTF dude?
+    }, GameDataType::ANY, GameDataType::BOOL, GameDataType::ARRAY);
 }
