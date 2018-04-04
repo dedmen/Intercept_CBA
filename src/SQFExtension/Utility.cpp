@@ -4,6 +4,12 @@
 #include <future>
 #include "Common/CapabilityManager.hpp"
 #include <csignal>
+
+#include <Psapi.h>
+#include <regex>
+#pragma comment (lib, "Psapi.lib")//GetModuleInformation
+#pragma comment (lib, "version.lib") //GetFileVersionInfoSize
+
 using namespace intercept::client;
 using namespace intercept;
 using namespace SQFExtensions;
@@ -594,10 +600,59 @@ void Utility::preStart() {
     }, elseIfType.first, elseIfType.first, game_data_type::CODE);
 
 
-    static auto _elseIfElse = host::registerFunction("else"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+    static auto _elseIfElse = host::register_sqf_command("else"sv, "description"sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
         auto elseIfT = static_cast<GameDataElseIf*>(left.data.get());
         elseIfT->statements.emplace_back(GameDataElseIf::statement{ true,right });
         return left;
-    }, elseIfType.first, elseIfType.first, GameDataType::CODE);
+    }, elseIfType.first, elseIfType.first, game_data_type::CODE);
     //#TODO elseif needs higher precedence
+
+    //Intercept loader.cpp by Dedmen
+    MODULEINFO modInfo = { nullptr };
+    HMODULE hModule = GetModuleHandleA(nullptr);
+    GetModuleInformation(GetCurrentProcess(), hModule, &modInfo, sizeof(MODULEINFO));
+    const uintptr_t baseAddress = reinterpret_cast<uintptr_t>(modInfo.lpBaseOfDll);
+    const uintptr_t moduleSize = static_cast<uintptr_t>(modInfo.SizeOfImage);
+    auto findInMemoryPattern = [baseAddress, moduleSize](const char* pattern, const char* mask, uintptr_t offset = 0) {
+        const uintptr_t base = baseAddress;
+        const uintptr_t size = moduleSize;
+
+        const uintptr_t patternLength = static_cast<uintptr_t>(strlen(mask));
+
+        for (uintptr_t i = 0; i < size - patternLength; i++) {
+            bool found = true;
+            for (uintptr_t j = 0; j < patternLength; j++) {
+                found &= mask[j] == '?' || pattern[j] == *reinterpret_cast<char*>(base + i + j);
+                if (!found)
+                    break;
+            }
+            if (found)
+                return base + i + offset;
+        }
+        return static_cast<uintptr_t>(0x0u);
+    };
+
+    #ifndef X64
+        //32bit win 1.80 Sig: 
+        constexpr auto pat = "\x56\x8B\xF1\x8B\x06\x8B\x40\x28\xFF\xD0\x84\xC0\x74\x4A\xC6\x86\x00\x00\x00\x00\x00\x57\x8B\x7C\x24\x0C\x8B\x07\x89\x86\x00\x00\x00\x00\x8B\x47\x04\x89\x86\x00\x00\x00\x00\x8B\x47\x08\x89\x86\x00\x00\x00\x00\xA1\x00\x00\x00\x00\x85\xC0\x74\x1A\x83\xB8\x00\x00\x00\x00\x00";
+        constexpr auto mask = "xxxxxxxxxxxxxxxx?????xxxxxxxxx????xxxxx????xxxxx????x????xxxxxx?????";
+    #else
+        //64bit win 1.80
+        constexpr auto pat = "\x48\x89\x5C\x24\x00\x57\x48\x83\xEC\x20\x48\x8B\x01\x48\x8B\xFA\x48\x8B\xD9\xFF\x50\x50\x84\xC0\x74\x4E\xC6\x83\x00\x00\x00\x00\x00\x8B\x07\x89\x83\x00\x00\x00\x00\x8B\x47\x04\x89\x83\x00\x00\x00\x00\x8B\x47\x08\x89\x83\x00\x00\x00\x00\x48\x8B\x05\x00\x00\x00\x00\x48\x85\xC0\x74\x21\x83\xB8\x00\x00\x00\x00\x00\x75\x18\xE8\x00\x00\x00\x00\x4C\x8B\xC7\x48\x8B\xD3\x4C\x8B\x08\x48\x8B\xC8\x41\xFF\x91\x00\x00\x00\x00\x48\x8B\x5C\x24\x00\x48\x83\xC4\x20\x5F\xC3";
+        constexpr auto mask = "xxxx?xxxxxxxxxxxxxxxxxxxxxxx?????xxxx????xxxxx????xxxxx????xxx????xxxxxxx?????xxx????xxxxxxxxxxxxxxx????xxxx?xxxxxx";
+    #endif
+
+
+
+    static auto found = findInMemoryPattern(pat,mask);
+
+    static auto _ragdoll = host::register_sqf_command("ragdollUnit"sv, ""sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
+        typedef void*(__thiscall *doRagdoll) (void* man, const vector3& velocity);
+
+        doRagdoll func = reinterpret_cast<doRagdoll>(found);
+        func(static_cast<game_data_object*>(left.data.get())->object->object, vector3(right));
+        return {};
+    }, game_data_type::NOTHING, game_data_type::OBJECT, game_data_type::ARRAY);
+
+
 }
