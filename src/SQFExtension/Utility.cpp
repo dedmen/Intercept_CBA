@@ -669,7 +669,19 @@ void Utility::preStart() {
     }, game_data_type::NOTHING, game_data_type::ARRAY, game_data_type::CODE);
 
 
+    static auto _strLessThan = host::register_sqf_command("<"sv, ""sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
+        r_string lStr = left;
+        r_string rStr = right;
 
+        return lStr < rStr;
+    }, game_data_type::BOOL, game_data_type::STRING, game_data_type::STRING);
+
+    static auto _strBiggerThan = host::register_sqf_command(">"sv, ""sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
+        r_string lStr = left;
+        r_string rStr = right;
+
+        return lStr > rStr;
+    }, game_data_type::BOOL, game_data_type::STRING, game_data_type::STRING);
 
 
 
