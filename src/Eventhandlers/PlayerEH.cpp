@@ -26,6 +26,7 @@ void PlayerEH::preStart() {
 
     GNativeFunctionManager.registerNativeFunction("cba_events_fnc_playerEH_EachFrame", [this](game_value_parameter) -> game_value {
         onFrame();
+        return {};
     });
 
     GNativeFunctionManager.registerNativeFunction("cba_events_fnc_playerEH_Map", [this](game_value_parameter data) -> game_value {
@@ -33,6 +34,7 @@ void PlayerEH::preStart() {
             CBA_oldVisibleMap = data;
             callEvent(eventType::visibleMap, data);
         }
+        return {};
     });
 
     GNativeFunctionManager.registerNativeFunction("CBA_fnc_addPlayerEventHandler", [this](game_value_parameter args) -> game_value {
@@ -40,7 +42,7 @@ void PlayerEH::preStart() {
 
         auto type = args.get(0);
         auto func = args.get(2);
-        if (!type.has_value() || !func.has_value()) return;
+        if (!type.has_value() || !func.has_value()) return {};
         auto typeEnum = typeFromString(*type);
         if (typeEnum == eventType::invalid) return { -1 };//#TODO throw exception?
 
@@ -52,7 +54,7 @@ void PlayerEH::preStart() {
 
         auto type = args.get(0);
         auto id = args.get(2);
-        if (!type.has_value() || !id.has_value()) return;
+        if (!type.has_value() || !id.has_value()) return {};
         auto typeEnum = typeFromString(*type);
         if (typeEnum == eventType::invalid) return { -1 };//#TODO throw exception?
 

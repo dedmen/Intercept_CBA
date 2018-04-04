@@ -57,7 +57,7 @@ void PFH::preStart() {
 
         game_value function;
         game_value args;
-        if (arg.type_enum() == GameDataType::CODE) {
+        if (arg.type_enum() == game_data_type::CODE) {
             function = arg;
         } else {
             function = arg[0];

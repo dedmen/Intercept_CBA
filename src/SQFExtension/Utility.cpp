@@ -7,6 +7,7 @@
 using namespace intercept::client;
 using namespace intercept;
 using namespace SQFExtensions;
+using SQFPar = game_value_parameter;
 
 static sqf_script_type GameDataElseIf_type;
 
@@ -16,7 +17,7 @@ public:
     GameDataElseIf() {}
     void lastRefDeleted() const override { delete this; }
     const sqf_script_type& type() const override { return GameDataElseIf_type; }
-    ~GameDataElseIf() override {};
+    ~GameDataElseIf() override {}
 
     bool get_as_bool() const override { return false; }
     float get_as_number() const override { return 0.f; }
@@ -60,26 +61,26 @@ game_value createElseIf() {
 
 
 
-game_value getNumberWithDef(game_value_parameter right_arg) {
+game_value getNumberWithDef(SQFPar right_arg) {
     if (right_arg.size() != 2) return {};
     if (sqf::is_number(right_arg[0]))
         return sqf::get_number(right_arg[0]);
     return right_arg[1];
 }
 
-game_value getTextWithDef(game_value_parameter right_arg) {
+game_value getTextWithDef(SQFPar right_arg) {
     if (right_arg.size() != 2) return {};
     if (sqf::is_number(right_arg[0]))
         return sqf::get_text(right_arg[0]);
     return right_arg[1];
 }
-game_value getArrayWithDef(game_value_parameter right_arg) {
+game_value getArrayWithDef(SQFPar right_arg) {
     if (right_arg.size() != 2) return {};
     if (sqf::is_number(right_arg[0]))
         return sqf::get_array(right_arg[0]);
     return right_arg[1];
 }
-game_value getBoolWithDef(game_value_parameter right_arg) {
+game_value getBoolWithDef(SQFPar right_arg) {
     if (right_arg.size() != 2) return {};
     if (sqf::is_number(right_arg[0]))
         return sqf::get_number(right_arg[0]) > 0.f;
@@ -89,7 +90,7 @@ game_value getBoolWithDef(game_value_parameter right_arg) {
     return right_arg[1];
 }
 
-game_value getAnyWithDef(game_value_parameter right_arg) {
+game_value getAnyWithDef(SQFPar right_arg) {
     if (right_arg.size() != 2) return {};
     if (sqf::is_number(right_arg[0]))
         return sqf::get_number(right_arg[0]);
@@ -100,29 +101,29 @@ game_value getAnyWithDef(game_value_parameter right_arg) {
     return right_arg[1];
 }
 
-game_value selectLast(game_value_parameter right_arg) {
+game_value selectLast(SQFPar right_arg) {
     return right_arg.to_array().back();
 }
 
-game_value popEnd(game_value_parameter right_arg) {
+game_value popEnd(SQFPar right_arg) {
     auto elem = right_arg.to_array().back();
     right_arg.to_array().erase(right_arg.to_array().end() - 1);
     return elem;
 }
 
-game_value popFront(game_value_parameter right_arg) {
+game_value popFront(SQFPar right_arg) {
     auto elem = right_arg.to_array().front();
     right_arg.to_array().erase(right_arg.to_array().begin());
     return elem;
 }
 
-game_value pushFront(game_value_parameter left_arg, game_value_parameter right_arg) {
+game_value pushFront(SQFPar left_arg, SQFPar right_arg) {
     auto& arr = left_arg.to_array();
     arr.emplace(arr.begin(), right_arg);
     return {};
 }
 
-game_value pushFrontUnique(game_value_parameter left_arg, game_value_parameter right_arg) {
+game_value pushFrontUnique(SQFPar left_arg, SQFPar right_arg) {
     auto& arr = left_arg.to_array();
     if (arr.find(right_arg) == arr.end()) {
         arr.emplace(arr.begin(), right_arg);
@@ -132,7 +133,7 @@ game_value pushFrontUnique(game_value_parameter left_arg, game_value_parameter r
 }
 
 
-game_value findCaseInsensitive(game_value_parameter left_arg, game_value_parameter right_arg) {
+game_value findCaseInsensitive(SQFPar left_arg, SQFPar right_arg) {
     bool searchIsString = right_arg.type() == game_data_string::type_def;
     auto& arr = left_arg.to_array();
     for (size_t it = 0; it < left_arg.size(); it++) {
@@ -146,7 +147,7 @@ game_value findCaseInsensitive(game_value_parameter left_arg, game_value_paramet
     return -1;
 }
 
-game_value inArrayCaseInsensitive(game_value_parameter right_arg, game_value_parameter left_arg) {
+game_value inArrayCaseInsensitive(SQFPar right_arg, SQFPar left_arg) {
     bool searchIsString = right_arg.type() == game_data_string::type_def;
     auto& arr = left_arg.to_array();
     for (size_t it = 0; it < left_arg.size(); it++) {
@@ -160,14 +161,14 @@ game_value inArrayCaseInsensitive(game_value_parameter right_arg, game_value_par
     return false;
 }
 
-game_value stringStartsWith(game_value_parameter left_arg, game_value_parameter right_arg) {
+game_value stringStartsWith(SQFPar left_arg, SQFPar right_arg) {
     auto leftStr = static_cast<sqf_string>(left_arg);
     auto rightStr = static_cast<sqf_string>(right_arg);
     if (rightStr.size() > leftStr.size()) return false;
     return (strncmp(leftStr.c_str(), rightStr.c_str(), std::min(leftStr.size(), rightStr.size())) == 0);
 }
 
-game_value stringStartsWithCI(game_value_parameter left_arg, game_value_parameter right_arg) {
+game_value stringStartsWithCI(SQFPar left_arg, SQFPar right_arg) {
     auto leftStr = static_cast<sqf_string>(left_arg);
     auto rightStr = static_cast<sqf_string>(right_arg);
     if (rightStr.size() > leftStr.size()) return false;
@@ -175,7 +176,7 @@ game_value stringStartsWithCI(game_value_parameter left_arg, game_value_paramete
 }
 
 
-game_value arrayUnion(game_value_parameter left_arg, game_value_parameter right_arg) {
+game_value arrayUnion(SQFPar left_arg, SQFPar right_arg) {
     auto& leftArr = left_arg.to_array();
     auto& rightArr = right_arg.to_array();
     auto_array<game_value> output(leftArr);
@@ -186,13 +187,13 @@ game_value arrayUnion(game_value_parameter left_arg, game_value_parameter right_
 }
 
 
-game_value regexReplace(game_value_parameter left_arg, game_value_parameter right_arg) {
+game_value regexReplace(SQFPar left_arg, SQFPar right_arg) {
     if (right_arg.size() != 2) return "";
     std::regex regr((std::string)right_arg[0]);
     return std::regex_replace((std::string)left_arg, regr, (std::string)right_arg[1]);
 }
 
-game_value getObjectConfigFromObj(game_value_parameter obj) {
+game_value getObjectConfigFromObj(SQFPar obj) {
     auto type = sqf::type_of(obj);
 
     for (std::string_view cls : { "CfgVehicles"sv, "CfgAmmo"sv, "CfgNonAIVehicles"sv }) {
@@ -203,7 +204,7 @@ game_value getObjectConfigFromObj(game_value_parameter obj) {
     return static_cast<game_value>(sqf::config_null());
 }
 
-game_value getObjectConfigFromStr(game_value_parameter className) {
+game_value getObjectConfigFromStr(SQFPar className) {
     sqf_string type = className;
     for (auto& cls : { "CfgVehicles"sv, "CfgAmmo"sv, "CfgNonAIVehicles"sv }) {
         auto cfgClass = sqf::config_entry() >> cls >> type;
@@ -213,7 +214,7 @@ game_value getObjectConfigFromStr(game_value_parameter className) {
     return static_cast<game_value>(sqf::config_null());
 }
 
-game_value getItemConfigFromObj(game_value_parameter obj) {
+game_value getItemConfigFromObj(SQFPar obj) {
     auto type = sqf::type_of(obj);
 
     for (auto& cls : { "CfgWeapons"sv, "CfgMagazines"sv, "CfgGlasses"sv }) {
@@ -224,7 +225,7 @@ game_value getItemConfigFromObj(game_value_parameter obj) {
     return static_cast<game_value>(sqf::config_null());
 }
 
-game_value getItemConfigFromStr(game_value_parameter className) {
+game_value getItemConfigFromStr(SQFPar className) {
     sqf_string type = className;
     for (auto& cls : { "CfgWeapons"sv, "CfgMagazines"sv, "CfgGlasses"sv }) {
         auto cfgClass = sqf::config_entry() >> cls >> type;
@@ -236,7 +237,7 @@ game_value getItemConfigFromStr(game_value_parameter className) {
 
 
 //https://github.com/CBATeam/CBA_A3/blob/master/addons/common/fnc_turretPath.sqf
-game_value turretPath(game_value_parameter unit) {
+game_value turretPath(SQFPar unit) {
     auto vehicle = sqf::vehicle(unit);
 
     for (auto& turret : sqf::all_turrets(vehicle, true)) {
@@ -246,17 +247,17 @@ game_value turretPath(game_value_parameter unit) {
 }
 
 
-game_value aliveGroup(game_value_parameter grp) {
+game_value aliveGroup(SQFPar grp) {
     for (auto& unit : sqf::units(static_cast<group>(grp)))
         if (sqf::alive(unit)) return true;
     return false;
 }
 
-game_value unarySpawn(game_value_parameter code) {
+game_value unarySpawn(SQFPar code) {
     return static_cast<game_value>(sqf::spawn({}, code));
 }
 
-game_value hasItem(game_value_parameter obj, game_value_parameter classn) {
+game_value hasItem(SQFPar obj, SQFPar classn) {
     r_string classname = classn;
     auto containsString = [&classname](const sqf_return_string_list& list) {
         for (auto& item : list)
@@ -278,10 +279,10 @@ game_value hasItem(game_value_parameter obj, game_value_parameter classn) {
 }
 
 
-game_value compareBoolNumber(game_value_parameter left, game_value_parameter right) {
+game_value compareBoolNumber(SQFPar left, SQFPar right) {
     return static_cast<bool>(left) == (static_cast<float>(right) != 0.f);
 }
-game_value compareNumberBool(game_value_parameter left, game_value_parameter right) {
+game_value compareNumberBool(SQFPar left, SQFPar right) {
     return static_cast<bool>(right) == (static_cast<float>(left) != 0.f);
 }
 
@@ -291,7 +292,7 @@ class GameInstructionSetLVar : public game_instruction {
 public:
     r_string vName;
     game_value val;
-    bool exec(types::__internal::game_state* state, void* t) override {
+    bool exec(game_state& state, vm_context& t) override {
         auto sv = client::host::functions.get_engine_allocator()->setvar_func;
         sv(vName.c_str(), val);
         return false;
@@ -302,7 +303,7 @@ public:
 
 };
 
-game_value FastForEach(uintptr_t, game_value_parameter left, game_value_parameter right) {
+game_value FastForEach(uintptr_t, SQFPar left, SQFPar right) {
     auto& arr = left.to_array();
     auto bodyCode = static_cast<game_data_code*>(right.data.get());
 
@@ -332,7 +333,7 @@ game_value FastForEach(uintptr_t, game_value_parameter left, game_value_paramete
 #ifdef _MSC_VER
 __declspec(noinline)
 #endif
-uintptr_t surfaceTexture_callST(game_value_parameter right) {
+uintptr_t surfaceTexture_callST(SQFPar right) {
     uintptr_t stackBuf[512];//More stackpushing to make sure our async doesn't touch this 
     client::host::functions.invoke_raw_unary(__sqf::unary__surfacetype__array__ret__string, right);
     stackBuf[211] = 13;
@@ -400,7 +401,7 @@ uintptr_t surfaceTexture_TestOffs(void* armaBase,uintptr_t stackBase, uint32_t i
 }
 
 
-game_value surfaceTexture(uintptr_t, game_value_parameter right) {
+game_value surfaceTexture(uintptr_t, SQFPar right) {
 
     //#ifdef _DEBUG
     //    //Doesn't work on Debug build because of /RTC and /GS which smaaaash the stack
@@ -456,81 +457,81 @@ game_value surfaceTexture(uintptr_t, game_value_parameter right) {
 
 void Utility::preStart() {
 
-    static auto _getNumberWithDef = host::registerFunction("getNumber", "", userFunctionWrapper<getNumberWithDef>, GameDataType::SCALAR, GameDataType::ARRAY);
-    static auto _getTextWithDef = host::registerFunction("getText", "", userFunctionWrapper<getTextWithDef>, GameDataType::STRING, GameDataType::ARRAY);
-    static auto _getArrayWithDef = host::registerFunction("getArray", "", userFunctionWrapper<getArrayWithDef>, GameDataType::ARRAY, GameDataType::ARRAY);
-    static auto _getBoolWithDef = host::registerFunction("getBool", "", userFunctionWrapper<getBoolWithDef>, GameDataType::BOOL, GameDataType::ARRAY);
-    static auto _getAnyWithDef = host::registerFunction("getAny", "", userFunctionWrapper<getAnyWithDef>, GameDataType::ANY, GameDataType::ARRAY);
-    static auto _selectLast = host::registerFunction("selectLast", "", userFunctionWrapper<selectLast>, GameDataType::ANY, GameDataType::ARRAY);
-    static auto _popEnd = host::registerFunction("popEnd", "", userFunctionWrapper<popEnd>, GameDataType::ANY, GameDataType::ARRAY);
-    static auto _popFront = host::registerFunction("popFront", "", userFunctionWrapper<popFront>, GameDataType::ANY, GameDataType::ARRAY);
-    static auto _pushFront = host::registerFunction("pushFront", "", userFunctionWrapper<pushFront>, GameDataType::NOTHING, GameDataType::ARRAY, GameDataType::ANY);
-    static auto _pushFrontUnique = host::registerFunction("pushFrontUnique", "", userFunctionWrapper<pushFrontUnique>, GameDataType::BOOL, GameDataType::ARRAY, GameDataType::ANY);
-    static auto _findCI = host::registerFunction("findCI", "", userFunctionWrapper<findCaseInsensitive>, GameDataType::ANY, GameDataType::ARRAY, GameDataType::ANY);
-    static auto _inArrayCI = host::registerFunction("inCI", "", userFunctionWrapper<inArrayCaseInsensitive>, GameDataType::ANY, GameDataType::ANY, GameDataType::ARRAY);
-    static auto _startsWith = host::registerFunction("startsWith", "", userFunctionWrapper<stringStartsWith>, GameDataType::BOOL, GameDataType::STRING, GameDataType::STRING);
-    static auto _startsWithCI = host::registerFunction("startsWithCI", "", userFunctionWrapper<stringStartsWith>, GameDataType::BOOL, GameDataType::STRING, GameDataType::STRING);
-    static auto _arrayUnion = host::registerFunction("arrayUnion", "", userFunctionWrapper<arrayUnion>, GameDataType::ARRAY, GameDataType::ARRAY, GameDataType::ARRAY);
-    static auto _regexReplace = host::registerFunction("regexReplace", "", userFunctionWrapper<regexReplace>, GameDataType::STRING, GameDataType::STRING, GameDataType::ARRAY);
-    static auto _getObjectConfigFromObj = host::registerFunction("getObjectConfig", "", userFunctionWrapper<getObjectConfigFromObj>, GameDataType::CONFIG, GameDataType::OBJECT);
-    static auto _getObjectConfigFromStr = host::registerFunction("getObjectConfig", "", userFunctionWrapper<getObjectConfigFromStr>, GameDataType::CONFIG, GameDataType::STRING);
-    static auto _getItemConfigFromObj = host::registerFunction("getItemConfig", "", userFunctionWrapper<getObjectConfigFromObj>, GameDataType::CONFIG, GameDataType::OBJECT);
-    static auto _getItemConfigFromStr = host::registerFunction("getItemConfig", "", userFunctionWrapper<getObjectConfigFromStr>, GameDataType::CONFIG, GameDataType::STRING);
-    static auto _alive = host::registerFunction("alive", "", userFunctionWrapper<aliveGroup>, GameDataType::BOOL, GameDataType::GROUP);
-    static auto _unarySpawn = host::registerFunction("spawn", "", userFunctionWrapper<unarySpawn>, GameDataType::SCRIPT, GameDataType::CODE);
-    static auto _turretPath = host::registerFunction("turretPath", "", userFunctionWrapper<turretPath>, GameDataType::ARRAY, GameDataType::OBJECT);
-    static auto _hasItem = host::registerFunction("hasItem", "", userFunctionWrapper<hasItem>, GameDataType::BOOL, GameDataType::OBJECT, GameDataType::STRING);
-    static auto _cmpBoolNumber = host::registerFunction("==", "", userFunctionWrapper<compareBoolNumber>, GameDataType::BOOL, GameDataType::BOOL, GameDataType::SCALAR);
-    static auto _cmpNumberBool = host::registerFunction("==", "", userFunctionWrapper<compareNumberBool>, GameDataType::BOOL, GameDataType::SCALAR, GameDataType::BOOL);
-    static auto _andNumberBool = host::registerFunction("&&", "", [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+    static auto _getNumberWithDef = host::register_sqf_command("getNumber", "", userFunctionWrapper<getNumberWithDef>, game_data_type::SCALAR, game_data_type::ARRAY);
+    static auto _getTextWithDef = host::register_sqf_command("getText", "", userFunctionWrapper<getTextWithDef>, game_data_type::STRING, game_data_type::ARRAY);
+    static auto _getArrayWithDef = host::register_sqf_command("getArray", "", userFunctionWrapper<getArrayWithDef>, game_data_type::ARRAY, game_data_type::ARRAY);
+    static auto _getBoolWithDef = host::register_sqf_command("getBool", "", userFunctionWrapper<getBoolWithDef>, game_data_type::BOOL, game_data_type::ARRAY);
+    static auto _getAnyWithDef = host::register_sqf_command("getAny", "", userFunctionWrapper<getAnyWithDef>, game_data_type::ANY, game_data_type::ARRAY);
+    static auto _selectLast = host::register_sqf_command("selectLast", "", userFunctionWrapper<selectLast>, game_data_type::ANY, game_data_type::ARRAY);
+    static auto _popEnd = host::register_sqf_command("popEnd", "", userFunctionWrapper<popEnd>, game_data_type::ANY, game_data_type::ARRAY);
+    static auto _popFront = host::register_sqf_command("popFront", "", userFunctionWrapper<popFront>, game_data_type::ANY, game_data_type::ARRAY);
+    static auto _pushFront = host::register_sqf_command("pushFront", "", userFunctionWrapper<pushFront>, game_data_type::NOTHING, game_data_type::ARRAY, game_data_type::ANY);
+    static auto _pushFrontUnique = host::register_sqf_command("pushFrontUnique", "", userFunctionWrapper<pushFrontUnique>, game_data_type::BOOL, game_data_type::ARRAY, game_data_type::ANY);
+    static auto _findCI = host::register_sqf_command("findCI", "", userFunctionWrapper<findCaseInsensitive>, game_data_type::ANY, game_data_type::ARRAY, game_data_type::ANY);
+    static auto _inArrayCI = host::register_sqf_command("inCI", "", userFunctionWrapper<inArrayCaseInsensitive>, game_data_type::ANY, game_data_type::ANY, game_data_type::ARRAY);
+    static auto _startsWith = host::register_sqf_command("startsWith", "", userFunctionWrapper<stringStartsWith>, game_data_type::BOOL, game_data_type::STRING, game_data_type::STRING);
+    static auto _startsWithCI = host::register_sqf_command("startsWithCI", "", userFunctionWrapper<stringStartsWith>, game_data_type::BOOL, game_data_type::STRING, game_data_type::STRING);
+    static auto _arrayUnion = host::register_sqf_command("arrayUnion", "", userFunctionWrapper<arrayUnion>, game_data_type::ARRAY, game_data_type::ARRAY, game_data_type::ARRAY);
+    static auto _regexReplace = host::register_sqf_command("regexReplace", "", userFunctionWrapper<regexReplace>, game_data_type::STRING, game_data_type::STRING, game_data_type::ARRAY);
+    static auto _getObjectConfigFromObj = host::register_sqf_command("getObjectConfig", "", userFunctionWrapper<getObjectConfigFromObj>, game_data_type::CONFIG, game_data_type::OBJECT);
+    static auto _getObjectConfigFromStr = host::register_sqf_command("getObjectConfig", "", userFunctionWrapper<getObjectConfigFromStr>, game_data_type::CONFIG, game_data_type::STRING);
+    static auto _getItemConfigFromObj = host::register_sqf_command("getItemConfig", "", userFunctionWrapper<getObjectConfigFromObj>, game_data_type::CONFIG, game_data_type::OBJECT);
+    static auto _getItemConfigFromStr = host::register_sqf_command("getItemConfig", "", userFunctionWrapper<getObjectConfigFromStr>, game_data_type::CONFIG, game_data_type::STRING);
+    static auto _alive = host::register_sqf_command("alive", "", userFunctionWrapper<aliveGroup>, game_data_type::BOOL, game_data_type::GROUP);
+    static auto _unarySpawn = host::register_sqf_command("spawn", "", userFunctionWrapper<unarySpawn>, game_data_type::SCRIPT, game_data_type::CODE);
+    static auto _turretPath = host::register_sqf_command("turretPath", "", userFunctionWrapper<turretPath>, game_data_type::ARRAY, game_data_type::OBJECT);
+    static auto _hasItem = host::register_sqf_command("hasItem", "", userFunctionWrapper<hasItem>, game_data_type::BOOL, game_data_type::OBJECT, game_data_type::STRING);
+    static auto _cmpBoolNumber = host::register_sqf_command("==", "", userFunctionWrapper<compareBoolNumber>, game_data_type::BOOL, game_data_type::BOOL, game_data_type::SCALAR);
+    static auto _cmpNumberBool = host::register_sqf_command("==", "", userFunctionWrapper<compareNumberBool>, game_data_type::BOOL, game_data_type::SCALAR, game_data_type::BOOL);
+    static auto _andNumberBool = host::register_sqf_command("&&", "", [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
         return static_cast<bool>(right) && static_cast<float>(left) != 0.f;
-    }, GameDataType::BOOL, GameDataType::SCALAR, GameDataType::BOOL);
+    }, game_data_type::BOOL, game_data_type::SCALAR, game_data_type::BOOL);
 
-    static auto _andBoolNumber = host::registerFunction("&&", "", [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+    static auto _andBoolNumber = host::register_sqf_command("&&", "", [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
         return static_cast<bool>(left) && static_cast<float>(right) != 0.f;
-    }, GameDataType::BOOL, GameDataType::BOOL, GameDataType::SCALAR);
+    }, game_data_type::BOOL, game_data_type::BOOL, game_data_type::SCALAR);
 
-    static auto _andNumberNumber = host::registerFunction("&&", "", [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+    static auto _andNumberNumber = host::register_sqf_command("&&", "", [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
         return static_cast<float>(left) != 0.f && static_cast<float>(right) != 0.f;
-    }, GameDataType::BOOL, GameDataType::SCALAR, GameDataType::SCALAR);
+    }, game_data_type::BOOL, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _currentUnit = host::registerFunction("currentUnit"sv, "Returns the current Unit (CBA_fnc_currentUnit)"sv, [](uintptr_t) -> game_value {
+    static auto _currentUnit = host::register_sqf_command("currentUnit"sv, "Returns the current Unit (CBA_fnc_currentUnit)"sv, [](uintptr_t) -> game_value {
         auto obj = sqf::get_variable(sqf::mission_namespace(), "");
         if (obj.is_null()) return sqf::player();
         return obj;
-    }, GameDataType::OBJECT);
+    }, game_data_type::OBJECT);
 
-    static auto _FastForEach = host::registerFunction(u8"FastForEach"sv, "", FastForEach, GameDataType::NOTHING, GameDataType::ARRAY, GameDataType::CODE);
+    static auto _FastForEach = host::register_sqf_command(u8"FastForEach"sv, "", FastForEach, game_data_type::NOTHING, game_data_type::ARRAY, game_data_type::CODE);
 
-    static auto _textNull = host::registerFunction("textNull"sv, "test \"\""sv, [](uintptr_t) -> game_value {
+    static auto _textNull = host::register_sqf_command("textNull"sv, "test \"\""sv, [](uintptr_t) -> game_value {
         return sqf::text("");
-    }, GameDataType::TEXT);
+    }, game_data_type::TEXT);
 
-    static auto _surfaceTexture = intercept::client::host::registerFunction("surfaceTexture"sv, "Gets the grounds surface texture at given coordinates"sv, surfaceTexture, GameDataType::STRING, GameDataType::ARRAY);
+    static auto _surfaceTexture = intercept::client::host::register_sqf_command("surfaceTexture"sv, "Gets the grounds surface texture at given coordinates"sv, surfaceTexture, game_data_type::STRING, game_data_type::ARRAY);
     REGISTER_CAPABILITY(surfaceTexture);
 
 
-    static auto _boolThenCode = host::registerFunction("then"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+    static auto _boolThenCode = host::register_sqf_command("then"sv, "description"sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
         if (static_cast<bool>(left))
             return sqf::call(right);
         return {}; //Ret Nil
-    }, GameDataType::ANY, GameDataType::BOOL, GameDataType::CODE);
+    }, game_data_type::ANY, game_data_type::BOOL, game_data_type::CODE);
 
-    static auto _boolThenArray = host::registerFunction("then"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+    static auto _boolThenArray = host::register_sqf_command("then"sv, "description"sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
         if (static_cast<bool>(left))
             return sqf::call(right[0]);
         if (right.size() >= 2)
             return sqf::call(right[1]);
         return {}; //You passed an array with no code for the else statement? WTF dude?
-    }, GameDataType::ANY, GameDataType::BOOL, GameDataType::ARRAY);
+    }, game_data_type::ANY, game_data_type::BOOL, game_data_type::ARRAY);
 
 
     //elseif
 
-    auto elseIfType = host::registerType("elseIfType"sv, "elseIfType"sv, "Dis is a elseif type. It elses ifs."sv, "elseIfType"sv, createGameDataElseIf);
+    auto elseIfType = host::register_sqf_type("elseIfType"sv, "elseIfType"sv, "Dis is a elseif type. It elses ifs."sv, "elseIfType"sv, createGameDataElseIf);
     GameDataElseIf_type = elseIfType.second;
 
-    static auto _boolThenElseIf = host::registerFunction("then"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+    static auto _boolThenElseIf = host::register_sqf_command("then"sv, "description"sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
         bool triggerFirst = static_cast<bool>(left);
         auto elseIfT = static_cast<GameDataElseIf*>(right.data.get());
 
@@ -545,52 +546,52 @@ void Utility::preStart() {
         //else code is also in above loop with a 'true' as condition.
 
         return {};
-    }, GameDataType::ANY, GameDataType::BOOL, elseIfType.first);
+    }, game_data_type::ANY, game_data_type::BOOL, elseIfType.first);
     //#TODO suppport for ifType
 
-    static auto _elseIfCodeBool = host::registerFunction("elif"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+    static auto _elseIfCodeBool = host::register_sqf_command("elif"sv, "description"sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
         auto elseIfT = new GameDataElseIf;
         elseIfT->baseCode = left;
 
         elseIfT->statements.emplace_back(GameDataElseIf::statement{ static_cast<bool>(right), {} });
 
         return game_value(elseIfT);
-    }, elseIfType.first, GameDataType::CODE, GameDataType::BOOL);
+    }, elseIfType.first, game_data_type::CODE, game_data_type::BOOL);
 
 
-    static auto _elseIfElseIfBool = host::registerFunction("elif"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+    static auto _elseIfElseIfBool = host::register_sqf_command("elif"sv, "description"sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
         auto elseIfT = static_cast<GameDataElseIf*>(left.data.get());
 
         elseIfT->statements.emplace_back(GameDataElseIf::statement{ static_cast<bool>(right), {} });
 
         return left;
-    }, elseIfType.first, elseIfType.first, GameDataType::BOOL);
+    }, elseIfType.first, elseIfType.first, game_data_type::BOOL);
 
-    static auto _elseIfCodeCode = host::registerFunction("elif"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+    static auto _elseIfCodeCode = host::register_sqf_command("elif"sv, "description"sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
         auto elseIfT = new GameDataElseIf;
         elseIfT->baseCode = left;
 
         elseIfT->statements.emplace_back(GameDataElseIf::statement{ right,{} });
 
         return game_value(elseIfT);
-    }, elseIfType.first, GameDataType::CODE, GameDataType::CODE);
+    }, elseIfType.first, game_data_type::CODE, game_data_type::CODE);
 
-    static auto _elseIfElseIfCode = host::registerFunction("elif"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+    static auto _elseIfElseIfCode = host::register_sqf_command("elif"sv, "description"sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
         auto elseIfT = static_cast<GameDataElseIf*>(left.data.get());
 
         elseIfT->statements.emplace_back(GameDataElseIf::statement{ right,{} });
 
         return left;
-    }, elseIfType.first, elseIfType.first, GameDataType::CODE);
+    }, elseIfType.first, elseIfType.first, game_data_type::CODE);
 
-    static auto _elseIfThenCode = host::registerFunction("then"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+    static auto _elseIfThenCode = host::register_sqf_command("then"sv, "description"sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
         auto elseIfT = static_cast<GameDataElseIf*>(left.data.get());
 
         //the previous elseif planted the statement condition already
         elseIfT->statements.back().code = right;
 
         return left;
-    }, elseIfType.first, elseIfType.first, GameDataType::CODE);
+    }, elseIfType.first, elseIfType.first, game_data_type::CODE);
 
 
     static auto _elseIfElse = host::registerFunction("else"sv, "description"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {

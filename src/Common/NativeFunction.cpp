@@ -8,7 +8,7 @@ NativeFunctionManager GNativeFunctionManager;
 
 
 static sqf_script_type GameDataNativeFunction_type;
-static GameDataType GGameDataNativeFunction_GDType;
+static game_data_type GGameDataNativeFunction_GDType;
 
 class GameDataNativeFunction : public game_data {
 public:
@@ -62,38 +62,38 @@ game_value createNativeFunction(std::string_view name, NativeFunctionManager::fu
 
 NativeFunctionManager::NativeFunctionManager() {
     Signal_PreStart.connect([this]() {
-        static auto nativeFunctionType = client::host::registerType("NativeFunction"sv, "NativeFunction"sv, "NativeFunction calling directly into Intercept"sv, "NativeFunction"sv, createGameDataNativeFunction);
+        static auto nativeFunctionType = client::host::register_sqf_type("NativeFunction"sv, "NativeFunction"sv, "NativeFunction calling directly into Intercept"sv, "NativeFunction"sv, createGameDataNativeFunction);
         GGameDataNativeFunction_GDType = nativeFunctionType.first;
         GameDataNativeFunction_type = nativeFunctionType.second;
 
 
-        static auto nativeFunctionCallUnary = client::host::registerFunction("call"sv, "Native Function call"sv, [](uintptr_t,game_value_parameter right) -> game_value {
+        static auto nativeFunctionCallUnary = client::host::register_sqf_command("call"sv, "Native Function call"sv, [](uintptr_t,game_value_parameter right) -> game_value {
             if (right.data && right.data->type() == GameDataNativeFunction_type) {
                 return static_cast<GameDataNativeFunction*>(right.data.get())->func({});
             }
             return {};
-        }, GameDataType::ANY, GGameDataNativeFunction_GDType);
+        }, game_data_type::ANY, GGameDataNativeFunction_GDType);
 
-        static auto nativeFunctionCallBinary = client::host::registerFunction("call"sv, "Native Function call"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+        static auto nativeFunctionCallBinary = client::host::register_sqf_command("call"sv, "Native Function call"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
              if (right.data && right.data->type() == GameDataNativeFunction_type) {
                  return static_cast<GameDataNativeFunction*>(right.data.get())->func(left);
              }
              return {};
-        }, GameDataType::ANY, GameDataType::ANY, GGameDataNativeFunction_GDType);
+        }, game_data_type::ANY, game_data_type::ANY, GGameDataNativeFunction_GDType);
 
-        static auto nativeFunctionSpawnUnary = client::host::registerFunction("spawn"sv, "Native Function spawn"sv, [](uintptr_t, game_value_parameter right) -> game_value {
+        static auto nativeFunctionSpawnUnary = client::host::register_sqf_command("spawn"sv, "Native Function spawn"sv, [](uintptr_t, game_value_parameter right) -> game_value {
             if (right.data && right.data->type() == GameDataNativeFunction_type) {
                 return static_cast<GameDataNativeFunction*>(right.data.get())->func({});
             }
             return {};
-        }, GameDataType::ANY, GGameDataNativeFunction_GDType);
+        }, game_data_type::ANY, GGameDataNativeFunction_GDType);
 
-        static auto nativeFunctionSpawnBinary = client::host::registerFunction("spawn"sv, "Native Function spawn"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+        static auto nativeFunctionSpawnBinary = client::host::register_sqf_command("spawn"sv, "Native Function spawn"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
             if (right.data && right.data->type() == GameDataNativeFunction_type) {
                 return static_cast<GameDataNativeFunction*>(right.data.get())->func(left);
             }
             return {};
-        }, GameDataType::ANY, GameDataType::ANY, GGameDataNativeFunction_GDType);
+        }, game_data_type::ANY, game_data_type::ANY, GGameDataNativeFunction_GDType);
 
 
 

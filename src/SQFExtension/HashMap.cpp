@@ -182,19 +182,19 @@ game_value hashGetKeyList(game_value_parameter hashMap) {
 
 void HashMap::preStart() {
 
-    auto codeType = host::registerType("HASHMAP"sv, "hashMap"sv, "Dis is a hashmap. It hashes things."sv, "hashMap"sv, createGameDataHashMap);
+    auto codeType = host::register_sqf_type("HASHMAP"sv, "hashMap"sv, "Dis is a hashmap. It hashes things."sv, "hashMap"sv, createGameDataHashMap);
     GameDataHashMap_type = codeType.second;
 
-    _createHashMap = host::registerFunction("createHashMap", "Creates a Hashmap", userFunctionWrapper<createHashMap>, codeType.first);
-    _hashMapSet = host::registerFunction("set", "Sets a value in a Hashmap", userFunctionWrapper<hashSet>, GameDataType::NOTHING, codeType.first, GameDataType::ARRAY);
-    _hashMapFind = host::registerFunction("find", "Finds an element in a Hashmap", userFunctionWrapper<hashFind>, GameDataType::ANY, codeType.first, GameDataType::ANY);
-    _hashMapSelect = host::registerFunction("select", "Finds an element in a Hashmap", userFunctionWrapper<hashFind>, GameDataType::ANY, codeType.first, GameDataType::ANY);
-    _hashMapRemove = host::registerFunction("deleteAt", "Deletes an element in a Hashmap", userFunctionWrapper<hashRemove>, GameDataType::NOTHING, codeType.first, GameDataType::ANY);
-    _hashMapContains = host::registerFunction("in", "Checks if given element is inside Hashmap", userFunctionWrapper<hashContains>, GameDataType::BOOL, GameDataType::ANY, codeType.first);
-    _hashMapCount = host::registerFunction("count", "Counts number of elements inside Hashmap", userFunctionWrapper<hashCount>, GameDataType::SCALAR, codeType.first);
-    _hashMapSetVar = host::registerFunction("setVariable", "", userFunctionWrapper<hashSetVar>, GameDataType::NOTHING, codeType.first, GameDataType::ARRAY);
-    _hashMapGetVarDef = host::registerFunction("getVariable", "", userFunctionWrapper<hashGetVarDef>, GameDataType::ANY, codeType.first, GameDataType::ARRAY);
-    _hashMapGetVarStr = host::registerFunction("getVariable", "", userFunctionWrapper<hashGetVarStr>, GameDataType::ANY, codeType.first, GameDataType::STRING);
-    _hashMapGetKeyList = host::registerFunction("allVariables", "", userFunctionWrapper<hashGetKeyList>, GameDataType::ARRAY, codeType.first);
+    _createHashMap = host::register_sqf_command("createHashMap", "Creates a Hashmap", userFunctionWrapper<createHashMap>, codeType.first);
+    _hashMapSet = host::register_sqf_command("set", "Sets a value in a Hashmap", userFunctionWrapper<hashSet>, game_data_type::NOTHING, codeType.first, game_data_type::ARRAY);
+    _hashMapFind = host::register_sqf_command("find", "Finds an element in a Hashmap", userFunctionWrapper<hashFind>, game_data_type::ANY, codeType.first, game_data_type::ANY);
+    _hashMapSelect = host::register_sqf_command("select", "Finds an element in a Hashmap", userFunctionWrapper<hashFind>, game_data_type::ANY, codeType.first, game_data_type::ANY);
+    _hashMapRemove = host::register_sqf_command("deleteAt", "Deletes an element in a Hashmap", userFunctionWrapper<hashRemove>, game_data_type::NOTHING, codeType.first, game_data_type::ANY);
+    _hashMapContains = host::register_sqf_command("in", "Checks if given element is inside Hashmap", userFunctionWrapper<hashContains>, game_data_type::BOOL, game_data_type::ANY, codeType.first);
+    _hashMapCount = host::register_sqf_command("count", "Counts number of elements inside Hashmap", userFunctionWrapper<hashCount>, game_data_type::SCALAR, codeType.first);
+    _hashMapSetVar = host::register_sqf_command("setVariable", "", userFunctionWrapper<hashSetVar>, game_data_type::NOTHING, codeType.first, game_data_type::ARRAY);
+    _hashMapGetVarDef = host::register_sqf_command("getVariable", "", userFunctionWrapper<hashGetVarDef>, game_data_type::ANY, codeType.first, game_data_type::ARRAY);
+    _hashMapGetVarStr = host::register_sqf_command("getVariable", "", userFunctionWrapper<hashGetVarStr>, game_data_type::ANY, codeType.first, game_data_type::STRING);
+    _hashMapGetKeyList = host::register_sqf_command("allVariables", "", userFunctionWrapper<hashGetKeyList>, game_data_type::ARRAY, codeType.first);
     REGISTER_CAPABILITY(HashMap);
 }

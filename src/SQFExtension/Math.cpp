@@ -149,44 +149,44 @@ game_value caternaryFunc(uintptr_t, game_value_parameter right) {
 
 void Math::preStart() {
 
-    static auto _sinh = host::registerFunction("sinh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
+    static auto _sinh = host::register_sqf_command("sinh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
         return std::sinh(right);
-    }, GameDataType::SCALAR, GameDataType::SCALAR);
+    }, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _cosh = host::registerFunction("cosh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
+    static auto _cosh = host::register_sqf_command("cosh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
         return std::cosh(right);
-    }, GameDataType::SCALAR, GameDataType::SCALAR);
+    }, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _tanh = host::registerFunction("tanh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
+    static auto _tanh = host::register_sqf_command("tanh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
         return std::tanh(right);
-    }, GameDataType::SCALAR, GameDataType::SCALAR);
+    }, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _asinh = host::registerFunction("asinh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
+    static auto _asinh = host::register_sqf_command("asinh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
         return std::asinh(right);
-    }, GameDataType::SCALAR, GameDataType::SCALAR);
+    }, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _acosh = host::registerFunction("acosh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
+    static auto _acosh = host::register_sqf_command("acosh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
         return std::acosh(right);
-    }, GameDataType::SCALAR, GameDataType::SCALAR);
+    }, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _atanh = host::registerFunction("atanh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
+    static auto _atanh = host::register_sqf_command("atanh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
         return std::atanh(right);
-    }, GameDataType::SCALAR, GameDataType::SCALAR);
+    }, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _naturalLog = intercept::client::host::registerFunction("ln", "", [](uintptr_t, game_value_parameter right) -> game_value {
+    static auto _naturalLog = intercept::client::host::register_sqf_command("ln", "", [](uintptr_t, game_value_parameter right) -> game_value {
         return log(static_cast<float>(right));
-    }, GameDataType::SCALAR, GameDataType::SCALAR);
+    }, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _nthRoot = intercept::client::host::registerFunction("root", "", [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+    static auto _nthRoot = intercept::client::host::register_sqf_command("root", "", [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
         return std::pow(static_cast<float>(right), 1.0f / static_cast<float>(left));
-    }, GameDataType::SCALAR, GameDataType::SCALAR, GameDataType::SCALAR);
+    }, game_data_type::SCALAR, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _logn = intercept::client::host::registerFunction("log", "", [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+    static auto _logn = intercept::client::host::register_sqf_command("log", "", [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
         return std::log(static_cast<float>(right)) / std::log(static_cast<float>(left));
-    }, GameDataType::SCALAR, GameDataType::SCALAR, GameDataType::SCALAR);
+    }, game_data_type::SCALAR, game_data_type::SCALAR, game_data_type::SCALAR);
 
 
-    static auto _catenaryConnect = intercept::client::host::registerFunction("catenaryConnect"sv, ""sv, caternaryFunc, GameDataType::ARRAY, GameDataType::ARRAY);
+    static auto _catenaryConnect = intercept::client::host::register_sqf_command("catenaryConnect"sv, ""sv, caternaryFunc, game_data_type::ARRAY, game_data_type::ARRAY);
 
 
 
