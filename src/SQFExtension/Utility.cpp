@@ -655,4 +655,22 @@ void Utility::preStart() {
     }, game_data_type::NOTHING, game_data_type::OBJECT, game_data_type::ARRAY);
 
 
+
+
+    static auto _sortCondition = host::register_sqf_command("sort"sv, "right parameter is _this[0]<_this[1] condition"sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
+
+        std::sort(left.to_array().begin(), left.to_array().end(), [&right](const game_value& l, const game_value& r) {
+            auto ret = sqf::call(right,{l,r});
+            if (ret.type() != game_data_bool::type_def) return false; //throw eval error.
+            return static_cast<bool>(ret);
+        });
+
+        return {};
+    }, game_data_type::NOTHING, game_data_type::ARRAY, game_data_type::CODE);
+
+
+
+
+
+
 }
