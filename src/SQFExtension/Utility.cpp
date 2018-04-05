@@ -4,11 +4,17 @@
 #include <future>
 #include "Common/CapabilityManager.hpp"
 #include <csignal>
-
-#include <Psapi.h>
 #include <regex>
+
+#ifdef __linux__
+#include <dlfcn.h>
+#include <link.h>
+#include <fstream>
+#else
+#include <Psapi.h>
 #pragma comment (lib, "Psapi.lib")//GetModuleInformation
 #pragma comment (lib, "version.lib") //GetFileVersionInfoSize
+#endif
 
 using namespace intercept::client;
 using namespace intercept;
@@ -178,7 +184,11 @@ game_value stringStartsWithCI(SQFPar left_arg, SQFPar right_arg) {
     auto leftStr = static_cast<sqf_string>(left_arg);
     auto rightStr = static_cast<sqf_string>(right_arg);
     if (rightStr.size() > leftStr.size()) return false;
-    return (_strnicmp(leftStr.c_str(), rightStr.c_str(), std::min(leftStr.size(), rightStr.size())) == 0);
+    #ifdef __linux__
+        return (strncasecmp(leftStr.c_str(), rightStr.c_str(), std::min(leftStr.size(), rightStr.size())) == 0);
+    #else
+        return (_strnicmp(leftStr.c_str(), rightStr.c_str(), std::min(leftStr.size(), rightStr.size())) == 0);
+    #endif
 }
 
 
@@ -320,7 +330,7 @@ game_value FastForEach(uintptr_t, SQFPar left, SQFPar right) {
     auto oldInstructions = bodyCode->instructions;
     ref<compact_array<ref<game_instruction>>> newInstr = compact_array<ref<game_instruction>>::create(*oldInstructions, oldInstructions->size() + 1);
 
-    std::_Copy_no_deprecate(oldInstructions->data() + 1, oldInstructions->data() + oldInstructions->size(), newInstr->data() + 2);
+    std::copy(oldInstructions->begin() + 1, oldInstructions->begin() + oldInstructions->size(), newInstr->begin() + 2);
     newInstr->data()[1] = curElInstruction;
 
     bodyCode->instructions = newInstr;
@@ -334,6 +344,8 @@ game_value FastForEach(uintptr_t, SQFPar left, SQFPar right) {
 
     return {};
 }
+
+#ifndef __linux__
 
 #pragma optimize( "gts", off )
 #ifdef _MSC_VER
@@ -460,6 +472,7 @@ game_value surfaceTexture(uintptr_t, SQFPar right) {
     return {};
 }
 #pragma optimize( "", on )
+#endif
 
 void Utility::preStart() {
 
@@ -513,9 +526,10 @@ void Utility::preStart() {
         return sqf::text("");
     }, game_data_type::TEXT);
 
+    #ifndef __linux__
     static auto _surfaceTexture = intercept::client::host::register_sqf_command("surfaceTexture"sv, "Gets the grounds surface texture at given coordinates"sv, surfaceTexture, game_data_type::STRING, game_data_type::ARRAY);
     REGISTER_CAPABILITY(surfaceTexture);
-
+    #endif
 
     static auto _boolThenCode = host::register_sqf_command("then"sv, "description"sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
         if (static_cast<bool>(left))
@@ -608,11 +622,26 @@ void Utility::preStart() {
     //#TODO elseif needs higher precedence
 
     //Intercept loader.cpp by Dedmen
+#ifdef __linux__
+    std::ifstream maps("/proc/self/maps");
+    uintptr_t start;
+    uintptr_t end;
+    char placeholder;
+    maps >> std::hex >> start >> placeholder >> end;
+    //link_map *lm = (link_map*) dlopen(0, RTLD_NOW);
+    //uintptr_t baseAddress = reinterpret_cast<uintptr_t>(lm->l_addr);
+    //uintptr_t moduleSize = 35000000; //35MB hardcoded till I find out how to detect it properly
+    uintptr_t baseAddress = start;
+    uintptr_t moduleSize = end - start;
+#else
     MODULEINFO modInfo = { nullptr };
     HMODULE hModule = GetModuleHandleA(nullptr);
     GetModuleInformation(GetCurrentProcess(), hModule, &modInfo, sizeof(MODULEINFO));
     const uintptr_t baseAddress = reinterpret_cast<uintptr_t>(modInfo.lpBaseOfDll);
     const uintptr_t moduleSize = static_cast<uintptr_t>(modInfo.SizeOfImage);
+#endif
+
+
     auto findInMemoryPattern = [baseAddress, moduleSize](const char* pattern, const char* mask, uintptr_t offset = 0) {
         const uintptr_t base = baseAddress;
         const uintptr_t size = moduleSize;
@@ -651,7 +680,11 @@ void Utility::preStart() {
     static auto found = findInMemoryPattern(pat,mask);
 
     static auto _ragdoll = host::register_sqf_command("ragdollUnit"sv, ""sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
-        typedef void*(__thiscall *doRagdoll) (void* man, const vector3& velocity);
+        #ifdef __linux__
+            typedef void*(*doRagdoll) (void* man, const vector3& velocity);
+        #else
+            typedef void*(__thiscall *doRagdoll) (void* man, const vector3& velocity);
+        #endif
 
         doRagdoll func = reinterpret_cast<doRagdoll>(found);
         func(static_cast<game_data_object*>(left.data.get())->object->object, vector3(right));

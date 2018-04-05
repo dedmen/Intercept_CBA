@@ -41,12 +41,12 @@ void PlayerEH::preStart() {
         if (args.size() < 2 || !sqf::has_interface()) return -1.f;
 
         auto type = args.get(0);
-        auto func = args.get(2);
+        auto func = args.get(1);
         if (!type.has_value() || !func.has_value()) return {};
         auto typeEnum = typeFromString(*type);
         if (typeEnum == eventType::invalid) return { -1 };//#TODO throw exception?
 
-        return addPlayerEventHandler(typeEnum, *func, args.get(2).value_or(false));
+        return static_cast<float>(addPlayerEventHandler(typeEnum, *func, args.get(2).value_or(false)));
     });
 
     GNativeFunctionManager.registerNativeFunction("CBA_fnc_addPlayerEventHandler", [this](game_value_parameter args) -> game_value {

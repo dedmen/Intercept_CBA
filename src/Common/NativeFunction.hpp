@@ -1,5 +1,6 @@
 #pragma once
 #include <shared/types.hpp>
+#include <functional>
 
 
 class NativeFunctionManager {

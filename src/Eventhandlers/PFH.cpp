@@ -149,9 +149,9 @@ void PFH::onFrame() {
         if (tickTime > handler->delta) {
             handler->delta += handler->delay;
             sv("_args", handler->args);
-            sv("_handle", handler->handle);
+            sv("_handle", static_cast<float>(handler->handle));
 
-            sqf::call(handler->func, { handler->args, handler->handle });
+            sqf::call(handler->func, { handler->args, static_cast<float>(handler->handle) });
         }
     }
 

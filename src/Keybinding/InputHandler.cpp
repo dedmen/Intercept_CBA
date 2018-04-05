@@ -1,5 +1,8 @@
 #include "InputHandler.hpp"
 #define DIRECTINPUT_VERSION 0x0800
+
+#ifndef __linux__
+
 #include "dinput.h"
 #include <thread>
 #include <string>
@@ -585,3 +588,33 @@ std::string InputHandler::DIKToString(uint32_t DIKCode) {
     }
     return "unknown";
 }
+
+#else
+
+    #include <intercept.hpp>
+    using namespace intercept;
+
+    Keyboard::Keyboard(std::string name_, std::string guid_, IDirectInputDevice8A* device_){}
+    void Keyboard::initialize(){}
+    bool Keyboard::poll(){return false;}
+    const std::array<bool, 256>& Keyboard::getKeyStates(){ static std::array<bool, 256> x; return x; }
+
+    Joystick::Joystick(std::string name_, std::string guid_, IDirectInputDevice8A* device_){}
+    void Joystick::initialize(){}
+    bool Joystick::poll(){ return false; }
+    const std::array<bool, 32>& Joystick::getKeyStates(){static std::array<bool, 32> x; return x; }
+    intercept::types::r_string Joystick::getName() {return r_string();};
+    int16_t Joystick::getPOV() {return 0;};
+
+    void InputHandler::preStart(){};
+
+    std::shared_ptr<Keyboard> InputHandler::getKeyboard() {return nullptr; };
+    std::vector<std::shared_ptr<Joystick>> InputHandler::getJoysticks() {return {}; };
+    void InputHandler::addKeyboard(std::shared_ptr<Keyboard> move_) {};
+    void InputHandler::addJoystick(std::shared_ptr<Joystick> move_) {};
+    std::string InputHandler::DIKToString(uint32_t DIKCode){return "";};
+    void InputHandler::fireEvents() {};
+
+
+
+#endif
