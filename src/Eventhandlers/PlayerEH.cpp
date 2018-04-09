@@ -49,11 +49,11 @@ void PlayerEH::preStart() {
         return static_cast<float>(addPlayerEventHandler(typeEnum, *func, args.get(2).value_or(false)));
     });
 
-    GNativeFunctionManager.registerNativeFunction("CBA_fnc_addPlayerEventHandler", [this](game_value_parameter args) -> game_value {
+    GNativeFunctionManager.registerNativeFunction("CBA_fnc_removePlayerEventHandler", [this](game_value_parameter args) -> game_value {
         if (args.size() < 2 || !sqf::has_interface()) return -1.f;
 
         auto type = args.get(0);
-        auto id = args.get(2);
+        auto id = args.get(1);
         if (!type.has_value() || !id.has_value()) return {};
         auto typeEnum = typeFromString(*type);
         if (typeEnum == eventType::invalid) return { -1 };//#TODO throw exception?

@@ -1,7 +1,8 @@
 #include "InputHandler.hpp"
 #define DIRECTINPUT_VERSION 0x0800
+#define DISABLE_INPUT_HANDLER
 
-#ifndef __linux__
+#if !defined(__linux__) && !defined(DISABLE_INPUT_HANDLER)
 
 #include "dinput.h"
 #include <thread>
