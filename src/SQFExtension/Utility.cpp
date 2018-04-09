@@ -5,6 +5,7 @@
 #include "Common/CapabilityManager.hpp"
 #include <csignal>
 #include <regex>
+#include <sstream>
 
 #ifdef __linux__
 #include <dlfcn.h>
@@ -721,5 +722,11 @@ void Utility::preStart() {
     }, game_data_type::BOOL, game_data_type::STRING, game_data_type::STRING);
 
 
+    static auto _numberArrayToHex = host::register_sqf_command("numberArrayToHexString"sv, ""sv, [](uintptr_t, SQFPar right) -> game_value {
+        std::stringstream stream;
+        for (auto& it : right.to_array())
+            stream << std::hex << static_cast<int>(it);
 
+        return stream.str();
+    }, game_data_type::STRING, game_data_type::ARRAY);
 }
