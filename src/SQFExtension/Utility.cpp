@@ -729,4 +729,41 @@ void Utility::preStart() {
 
         return stream.str();
     }, game_data_type::STRING, game_data_type::ARRAY);
+
+
+    static auto _selectIf = host::register_sqf_command("numberArrayToHexString"sv, ""sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
+        
+
+        auto& arr = left.to_array();
+
+
+        auto bodyCode = static_cast<game_data_code*>(right.data.get());
+
+        //Insert instruction to set _x
+        ref<GameInstructionSetLVar> curElInstruction = rv_allocator<GameInstructionSetLVar>::create_single();
+        curElInstruction->vName = "_x";
+        auto oldInstructions = bodyCode->instructions;
+        ref<compact_array<ref<game_instruction>>> newInstr = compact_array<ref<game_instruction>>::create(*oldInstructions, oldInstructions->size() + 1);
+
+        std::copy(oldInstructions->begin() + 1, oldInstructions->begin() + oldInstructions->size(), newInstr->begin() + 2);
+        newInstr->data()[1] = curElInstruction;
+
+        bodyCode->instructions = newInstr;
+
+        //actual loop
+        for (auto& element : arr) {
+            curElInstruction->val.data = element.data;//set _x value
+            if (static_cast<bool>(sqf::call(right))) {
+                bodyCode->instructions = oldInstructions; //turn instructions back to old state
+                return element;
+            }
+        }
+
+        bodyCode->instructions = oldInstructions; //turn instructions back to old state
+
+        return {};
+    }, game_data_type::ANY, game_data_type::ARRAY, game_data_type::CODE);
+
+
+
 }
