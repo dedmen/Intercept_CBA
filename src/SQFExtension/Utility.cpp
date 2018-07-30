@@ -6,6 +6,7 @@
 #include <csignal>
 #include <regex>
 #include <sstream>
+#include <windows.h>
 
 #ifdef __linux__
 #include <dlfcn.h>
@@ -475,6 +476,46 @@ game_value surfaceTexture(uintptr_t, SQFPar right) {
 #pragma optimize( "", on )
 #endif
 
+game_value binarySearch(uintptr_t, SQFPar left, SQFPar right) {
+    auto& arr = left.to_array();
+    if (right.type_enum() == game_data_type::CODE) {
+        auto it = std::lower_bound(arr.begin(), arr.end(), game_value(), [&right](const game_value& arg, const game_value&) {
+            return sqf::call(static_cast<code>(right), arg);
+        });
+        if (it == arr.end()) return {};
+        //If result is smaller than wanted value. Then it's not in the array at all and would be before the first element if sorted.
+        if (it == arr.begin() && static_cast<bool>(sqf::call(static_cast<code>(right), *it))) return {};
+        return *it;
+    } else if (right.type_enum() == game_data_type::STRING) {
+        auto it = std::lower_bound(arr.begin(), arr.end(), game_value(), [&right](const game_value& arg, const game_value&) {
+            return static_cast<const r_string&>(arg) < static_cast<const r_string&>(right);
+        });
+        if (it == arr.end()) return {};
+        if (it == arr.begin() && static_cast<const r_string&>(*it) != static_cast<const r_string&>(right)) return {};
+        return *it;
+    } else if (right.type_enum() == game_data_type::SCALAR) {
+        auto it = std::lower_bound(arr.begin(), arr.end(), game_value(), [&right](const game_value& arg, const game_value&) {
+            return static_cast<float>(arg) < static_cast<float>(right);
+        });
+        if (it == arr.end()) return {};
+        if (it == arr.begin() && static_cast<float>(*it) != static_cast<float>(right)) return {};
+        return *it;
+    }
+}
+
+game_value compare_spaceShip_string(uintptr_t, SQFPar left, SQFPar right) {
+    return strcmp(static_cast<const r_string&>(left).data(), static_cast<const r_string&>(right).data());
+}
+
+game_value compare_spaceShip_number(uintptr_t, SQFPar left, SQFPar right) {
+    if (static_cast<float>(left) < static_cast<float>(right)) return -1;
+    if (static_cast<float>(left) > static_cast<float>(right)) return 1;
+    return 0;
+}
+
+
+
+
 void Utility::preStart() {
 
     static auto _getNumberWithDef = host::register_sqf_command("getNumber", "", userFunctionWrapper<getNumberWithDef>, game_data_type::SCALAR, game_data_type::ARRAY);
@@ -731,7 +772,7 @@ void Utility::preStart() {
     }, game_data_type::STRING, game_data_type::ARRAY);
 
 
-    static auto _selectIf = host::register_sqf_command("numberArrayToHexString"sv, ""sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
+    static auto _selectIf = host::register_sqf_command("selectIf"sv, ""sv, [](uintptr_t, SQFPar left, SQFPar right) -> game_value {
         
 
         auto& arr = left.to_array();
@@ -764,6 +805,17 @@ void Utility::preStart() {
         return {};
     }, game_data_type::ANY, game_data_type::ARRAY, game_data_type::CODE);
 
+    static auto _spaceship_string = host::register_sqf_command("<=>", "Compares values. If left<right returns -1. If left>right returns 1. Else returns 0.",
+        compare_spaceShip_string, game_data_type::SCALAR, game_data_type::STRING, game_data_type::STRING);
 
+    static auto _spaceship_number = host::register_sqf_command("<=>", "Compares values. If left<right returns -1. If left>right returns 1. Else returns 0.",
+        compare_spaceShip_number, game_data_type::SCALAR, game_data_type::SCALAR, game_data_type::SCALAR);
+
+    static auto _binarySearch_code = host::register_sqf_command("binaryFind", "Compares values. If left<right returns -1. If left>right returns 1. Else returns 0.",
+        binarySearch, game_data_type::ANY, game_data_type::ARRAY, game_data_type::CODE);
+    static auto _binarySearch_string = host::register_sqf_command("binaryFind", "Array needs to be presorted ascending order",
+        binarySearch, game_data_type::STRING, game_data_type::ARRAY, game_data_type::STRING);
+    static auto _binarySearch_number = host::register_sqf_command("binaryFind", "Array needs to be presorted ascending order",
+        binarySearch, game_data_type::SCALAR, game_data_type::ARRAY, game_data_type::SCALAR);
 
 }
