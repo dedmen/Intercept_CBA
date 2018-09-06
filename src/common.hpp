@@ -68,3 +68,4 @@ extern Signal<void()> Signal_PreInit;
 extern Signal<void()> Signal_PrePreInit;
 extern Signal<void()> Signal_PostInit;
 extern Signal<void()> Signal_MissionEnded;
+extern Signal<void()> Signal_RegisterPluginInterface;

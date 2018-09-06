@@ -49,6 +49,8 @@ Signal<void()> Signal_PreInit;
 Signal<void()> Signal_PrePreInit;
 Signal<void()> Signal_PostInit;
 Signal<void()> Signal_MissionEnded;
+Signal<void()> Signal_RegisterPluginInterface;
+
 
 void intercept::pre_start() {
     SQFExtensions::Utility::preStart();
@@ -72,4 +74,8 @@ void intercept::post_init() {
 
 void intercept::mission_ended() {
     Signal_MissionEnded();
+}
+
+void intercept::register_interfaces() {
+    Signal_RegisterPluginInterface();
 }
