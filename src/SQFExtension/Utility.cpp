@@ -311,8 +311,7 @@ public:
     r_string vName;
     game_value val;
     bool exec(game_state& state, vm_context& t) override {
-        auto sv = client::host::functions.get_engine_allocator()->setvar_func;
-        sv(vName.c_str(), val);
+		state.eval->varspace->varspace.insert({ vName, val });
         return false;
     }
     int stack_size(void* t) const override { return 0; };

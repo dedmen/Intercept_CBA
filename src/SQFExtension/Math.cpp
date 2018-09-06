@@ -1,7 +1,7 @@
 #include "SQFExtensions.hpp"
 #include <intercept.hpp>
 #include <pmmintrin.h>
-#include <cmath>
+#include "Common/NativeFunction.hpp"
 using namespace intercept::client;
 using namespace SQFExtensions;
 
@@ -191,6 +191,50 @@ void Math::preStart() {
 
     static auto _catenaryConnect = intercept::client::host::register_sqf_command("catenaryConnect"sv, ""sv, caternaryFunc, game_data_type::ARRAY, game_data_type::ARRAY);
 
+
+     GNativeFunctionManager.registerNativeFunction("CBA_fnc_vectSubtract",[](game_value_parameter args) -> game_value {
+         if (args.size() != 2) return { 0,0,0 };
+
+         vector3 v1 = args[0];
+         vector3 v2 = args[1];
+
+         return v1 - v2;
+     });
+
+     GNativeFunctionManager.registerNativeFunction("CBA_fnc_vectRotate2D", [](game_value_parameter args) -> game_value {
+         if (args.size() != 3) return { 0,0 };
+         vector2 center = args[0];
+         vector3 vector = args[1];
+         float angle = args[2];
+
+
+         auto _dx = center.x - vector.x;
+         auto _dy = center.y - vector.y;
+
+         return {
+             center.x - ((_dx * cos(angle)) - (_dy * sin(angle))),
+             center.y - ((_dx * sin(angle)) + (_dy * cos(angle)))
+         };
+     });
+
+     GNativeFunctionManager.registerNativeFunction("CBA_fnc_vectMagn2D", [](game_value_parameter args) -> game_value {
+         if (args.size() != 2) return { 0,0 };
+
+         return static_cast<vector2>(args).magnitude();
+     });
+
+     GNativeFunctionManager.registerNativeFunction("CBA_fnc_vectElev", [](game_value_parameter args) -> game_value {
+         if (args.size() != 3) return 0.f;
+
+         return std::atan2(args[2], static_cast<vector2>(args).magnitude());
+     });
+
+
+     GNativeFunctionManager.registerNativeFunction("CBA_fnc_vectCross2D", [](game_value_parameter args) -> game_value {
+         if (args.size() != 2) return { 0,0 };
+
+         return static_cast<vector2>(args[0]).cross(static_cast<vector2>(args[1]));
+     });
 
 
 }
