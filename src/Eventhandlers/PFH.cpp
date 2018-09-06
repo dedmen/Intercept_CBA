@@ -16,6 +16,7 @@ PFH::PFH() {
 }
 
 void PFH::preStart() {
+	return;
     if (!sqf::_has_fast_call()) return; //If we can't be faster than plain SQF then don't even try
 
     REGISTER_CAPABILITY(PFH);
@@ -44,7 +45,9 @@ void PFH::preStart() {
     });
 
     GNativeFunctionManager.registerNativeFunction("CBA_fnc_removePerFrameHandler", [this](game_value_parameter arg) -> game_value {
-        int handle = arg;
+        auto val = arg.get(0);
+        if (!val.has_value()) return {};
+        int handle = *val;
         removePerFrameHandler(handle);
         return {};
     });
@@ -122,11 +125,16 @@ void PFH::preStart() {
 void PFH::preInit() {
     sqf::set_variable(sqf::mission_namespace(), "CBA_missionTime", 0);
     PFHHandle = 0;
+    perFrameHandlerArray.clear();
+    waitAndExecArray.clear();
+    nextFrameBufferA.clear();
+    nextFrameBufferB.clear();
+    waitUntilAndExecArray.clear();
 }
 
 void PFH::onFrame() {
-    auto sv = client::host::functions.get_engine_allocator()->setvar_func;
-    sv("_tickTime", sqf::diag_ticktime());
+	auto gamestate = client::host::functions.get_engine_allocator()->gameState;
+	gamestate->eval->varspace->varspace.insert({ "_tickTime"sv, sqf::diag_ticktime() });
     auto tickTime = sqf::diag_ticktime();     //chrono seconds
 
 
@@ -148,8 +156,8 @@ void PFH::onFrame() {
     for (auto& handler : pfhcopy) {
         if (tickTime > handler->delta) {
             handler->delta += handler->delay;
-            sv("_args", handler->args);
-            sv("_handle", static_cast<float>(handler->handle));
+			gamestate->eval->varspace->varspace.insert({ "_args"sv, handler->args });
+			gamestate->eval->varspace->varspace.insert({ "_handle"sv, static_cast<float>(handler->handle) });
 
             sqf::call(handler->func, { handler->args, static_cast<float>(handler->handle) });
         }
@@ -235,7 +243,7 @@ uint32_t PFH::addPerFrameHandler(game_value function, float delay, game_value ar
 void PFH::removePerFrameHandler(uint32_t handle) {
 
     for (auto& handler : perFrameHandlerArray) {
-        if (handle > handler->handle) {
+        if (handle == handler->handle) {
             handler->del = true;
         }
     }

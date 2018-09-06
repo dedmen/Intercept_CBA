@@ -20,6 +20,7 @@ PlayerEH::PlayerEH() {
 }
 
 void PlayerEH::preStart() {
+	return;
     if (!sqf::_has_fast_call()) return; //If we can't be faster than plain SQF don't try.
 
     REGISTER_CAPABILITY(PlayerEH);
@@ -42,7 +43,7 @@ void PlayerEH::preStart() {
 
         auto type = args.get(0);
         auto func = args.get(1);
-        if (!type.has_value() || !func.has_value()) return {};
+        if (!type.has_value() || !func.has_value()) return -1.f;
         auto typeEnum = typeFromString(*type);
         if (typeEnum == eventType::invalid) return { -1 };//#TODO throw exception?
 
@@ -54,7 +55,7 @@ void PlayerEH::preStart() {
 
         auto type = args.get(0);
         auto id = args.get(1);
-        if (!type.has_value() || !id.has_value()) return {};
+        if (!type.has_value() || !id.has_value()) return -1.f;
         auto typeEnum = typeFromString(*type);
         if (typeEnum == eventType::invalid) return { -1 };//#TODO throw exception?
 
