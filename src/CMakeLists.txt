@@ -61,7 +61,7 @@ set_target_properties(${INTERCEPT_CBA_NAME} PROPERTIES FOLDER intercept-cba)
 if(CMAKE_COMPILER_IS_GNUCXX)
 	SET(CMAKE_CXX_FLAGS "-std=c++1z -O2 -s -fPIC -fpermissive -static-libgcc -static-libstdc++")#-march=i686 -m32
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-	set(CMAKE_SHARED_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
+	set(CMAKE_SHARED_LINKER_FLAGS "-shared -static-libgcc -static-libstdc++")
 else()
 	set(CMAKE_CXX_FLAGS_DEBUG "/D _DEBUG /MTd /Zi /Ob0 /Od /RTC1 /MP /EHsc")
 	set(CMAKE_CXX_FLAGS_RELEASE "/MT /Zi /O2 /Ob1 /EHsc /MP") #with debug info

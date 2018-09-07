@@ -212,8 +212,8 @@ void Math::preStart() {
          auto _dy = center.y - vector.y;
 
          return {
-             center.x - ((_dx * cos(angle)) - (_dy * sin(angle))),
-             center.y - ((_dx * sin(angle)) + (_dy * cos(angle)))
+             static_cast<float>(center.x - ((_dx * cos(angle)) - (_dy * sin(angle)))),
+			 static_cast<float>(center.y - ((_dx * sin(angle)) + (_dy * cos(angle))))
          };
      });
 

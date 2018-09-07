@@ -8,7 +8,7 @@ NativeFunctionManager GNativeFunctionManager;
 
 class NativeFunctionPluginInterfaceImpl : public NativeFunctionPluginInterface {
 public:
-    void registerNativeFunction(std::string_view name, functionType func) throw(std::invalid_argument) override {
+    void registerNativeFunction(std::string_view name, functionType func) noexcept(false) override {
 		GNativeFunctionManager.registerNativeFunction(name, func);
     }
 };

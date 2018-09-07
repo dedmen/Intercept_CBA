@@ -13,7 +13,7 @@ public:
         @brief registers new Native function
         @throws std::invalid_argument if Function with that name already exists
     */
-    virtual void registerNativeFunction(std::string_view name, functionType func) throw(std::invalid_argument) = 0;
+    virtual void registerNativeFunction(std::string_view name, functionType func) noexcept(false) = 0;
 };
 
 class NativeFunctionManager {

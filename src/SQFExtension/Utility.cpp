@@ -6,13 +6,13 @@
 #include <csignal>
 #include <regex>
 #include <sstream>
-#include <windows.h>
 
 #ifdef __linux__
 #include <dlfcn.h>
 #include <link.h>
 #include <fstream>
 #else
+#include <windows.h>
 #include <Psapi.h>
 #pragma comment (lib, "Psapi.lib")//GetModuleInformation
 #pragma comment (lib, "version.lib") //GetFileVersionInfoSize
@@ -311,7 +311,7 @@ public:
     r_string vName;
     game_value val;
     bool exec(game_state& state, vm_context& t) override {
-		state.eval->varspace->varspace.insert({ vName, val });
+		state.eval->local->variables.insert({ vName, val });
         return false;
     }
     int stack_size(void* t) const override { return 0; };
