@@ -207,8 +207,20 @@ game_value arrayUnion(SQFPar left_arg, SQFPar right_arg) {
 
 game_value regexReplace(SQFPar left_arg, SQFPar right_arg) {
     if (right_arg.size() != 2) return "";
-    std::regex regr((std::string)right_arg[0]);
-    return std::regex_replace((std::string)left_arg, regr, (std::string)right_arg[1]);
+    r_string pattern = right_arg[0];
+    std::string searchString = left_arg;
+    std::string replaceString = right_arg[1];
+
+
+    std::regex regr(pattern.data(), pattern.size());
+    return std::regex_replace(searchString, regr, replaceString);
+}
+
+game_value regexMatch(SQFPar left_arg, SQFPar right_arg) {
+    r_string pattern = right_arg;
+    r_string searchString = left_arg;
+    std::regex regr(pattern.data(), pattern.size());
+    return std::regex_match(searchString.begin(), searchString.end(), regr, std::regex_constants::match_any);
 }
 
 game_value getObjectConfigFromObj(SQFPar obj) {
@@ -311,7 +323,7 @@ public:
     r_string vName;
     game_value val;
     bool exec(game_state& state, vm_context& t) override {
-		state.eval->local->variables.insert({ vName, val });
+        state.eval->local->variables.insert({ vName, val });
         return false;
     }
     int stack_size(void* t) const override { return 0; };
@@ -533,6 +545,7 @@ void Utility::preStart() {
     static auto _startsWithCI = host::register_sqf_command("startsWithCI", "", userFunctionWrapper<stringStartsWith>, game_data_type::BOOL, game_data_type::STRING, game_data_type::STRING);
     static auto _arrayUnion = host::register_sqf_command("arrayUnion", "", userFunctionWrapper<arrayUnion>, game_data_type::ARRAY, game_data_type::ARRAY, game_data_type::ARRAY);
     static auto _regexReplace = host::register_sqf_command("regexReplace", "", userFunctionWrapper<regexReplace>, game_data_type::STRING, game_data_type::STRING, game_data_type::ARRAY);
+    static auto _regexMatch = host::register_sqf_command("regexMatch", "", userFunctionWrapper<regexMatch>, game_data_type::STRING, game_data_type::STRING, game_data_type::BOOL);
     static auto _getObjectConfigFromObj = host::register_sqf_command("getObjectConfig", "", userFunctionWrapper<getObjectConfigFromObj>, game_data_type::CONFIG, game_data_type::OBJECT);
     static auto _getObjectConfigFromStr = host::register_sqf_command("getObjectConfig", "", userFunctionWrapper<getObjectConfigFromStr>, game_data_type::CONFIG, game_data_type::STRING);
     static auto _getItemConfigFromObj = host::register_sqf_command("getItemConfig", "", userFunctionWrapper<getObjectConfigFromObj>, game_data_type::CONFIG, game_data_type::OBJECT);
