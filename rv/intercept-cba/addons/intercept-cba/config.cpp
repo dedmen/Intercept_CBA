@@ -3,7 +3,7 @@ class CfgPatches {
         units[] = {""};
         weapons[] = {};
         requiredVersion = 0.1;
-        requiredAddons[] = { "Intercept_Core"};
+        requiredAddons[] = { "Intercept_Core" };
         version = 0.1;
     };
 };

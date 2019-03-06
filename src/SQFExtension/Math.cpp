@@ -232,8 +232,9 @@ void Math::preStart() {
 
      GNativeFunctionManager.registerNativeFunction("CBA_fnc_vectCross2D", [](game_value_parameter args) -> game_value {
          if (args.size() != 2) return { 0,0 };
-
-         return static_cast<vector2>(args[0]).cross(static_cast<vector2>(args[1]));
+         auto u = static_cast<vector2>(args[0]);
+         auto v = static_cast<vector2>(args[1]);
+         return (u.x * v.y) - (u.y * v.x);
      });
 
 

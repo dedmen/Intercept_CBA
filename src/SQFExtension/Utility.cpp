@@ -323,7 +323,7 @@ public:
     r_string vName;
     game_value val;
     bool exec(game_state& state, vm_context& t) override {
-        state.eval->local->variables.insert({ vName, val });
+        state.set_local_variable(vName, val, false);
         return false;
     }
     int stack_size(void* t) const override { return 0; };
@@ -341,12 +341,8 @@ game_value FastForEach(uintptr_t, SQFPar left, SQFPar right) {
     ref<GameInstructionSetLVar> curElInstruction = rv_allocator<GameInstructionSetLVar>::create_single();
     curElInstruction->vName = "_x";
     auto oldInstructions = bodyCode->instructions;
-    ref<compact_array<ref<game_instruction>>> newInstr = compact_array<ref<game_instruction>>::create(*oldInstructions, oldInstructions->size() + 1);
 
-    std::copy(oldInstructions->begin() + 1, oldInstructions->begin() + oldInstructions->size(), newInstr->begin() + 2);
-    newInstr->data()[1] = curElInstruction;
-
-    bodyCode->instructions = newInstr;
+    bodyCode->instructions.insert(bodyCode->instructions.begin(), curElInstruction);
 
     for (auto& element : arr) {
         curElInstruction->val.data = element.data;//set _x value
@@ -796,12 +792,8 @@ void Utility::preStart() {
         ref<GameInstructionSetLVar> curElInstruction = rv_allocator<GameInstructionSetLVar>::create_single();
         curElInstruction->vName = "_x";
         auto oldInstructions = bodyCode->instructions;
-        ref<compact_array<ref<game_instruction>>> newInstr = compact_array<ref<game_instruction>>::create(*oldInstructions, oldInstructions->size() + 1);
 
-        std::copy(oldInstructions->begin() + 1, oldInstructions->begin() + oldInstructions->size(), newInstr->begin() + 2);
-        newInstr->data()[1] = curElInstruction;
-
-        bodyCode->instructions = newInstr;
+        bodyCode->instructions.insert(bodyCode->instructions.begin(), curElInstruction);
 
         //actual loop
         for (auto& element : arr) {

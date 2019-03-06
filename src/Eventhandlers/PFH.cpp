@@ -134,8 +134,8 @@ void PFH::preInit() {
 
 void PFH::onFrame() {
 	auto gamestate = client::host::functions.get_engine_allocator()->gameState;
-	gamestate->eval->local->variables.insert({ "_tickTime"sv, sqf::diag_ticktime() });
     auto tickTime = sqf::diag_ticktime();     //chrono seconds
+    gamestate->set_local_variable("_tickTime"sv, tickTime, false);
 
 
     sqf::call(sqf::get_variable(sqf::mission_namespace(), "CBA_common_fnc_missionTimePFH"));
@@ -156,8 +156,8 @@ void PFH::onFrame() {
     for (auto& handler : pfhcopy) {
         if (tickTime > handler->delta) {
             handler->delta += handler->delay;
-			gamestate->eval->local->variables.insert({ "_args"sv, handler->args });
-			gamestate->eval->local->variables.insert({ "_handle"sv, static_cast<float>(handler->handle) });
+            gamestate->set_local_variable("_args"sv, handler->args, false);
+            gamestate->set_local_variable("_handle"sv, static_cast<float>(handler->handle), false);
 
             sqf::call(handler->func, { handler->args, static_cast<float>(handler->handle) });
         }
