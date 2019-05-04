@@ -89,7 +89,7 @@ NativeFunctionManager::NativeFunctionManager() {
         GameDataNativeFunction_type = nativeFunctionType.second;
 
 
-        static auto nativeFunctionCallUnary = client::host::register_sqf_command("call"sv, "Native Function call"sv, [](uintptr_t,game_value_parameter right) -> game_value {
+        static auto nativeFunctionCallUnary = client::host::register_sqf_command("call"sv, "Native Function call"sv, [](game_state&,game_value_parameter right) -> game_value {
             game_value profScope = GNativeFunctionManager.profilerInterface ? 
                 GNativeFunctionManager.profilerInterface->createScope(static_cast<GameDataNativeFunction*>(right.data.get())->name + " NF"sv) : game_value();
             
@@ -100,7 +100,7 @@ NativeFunctionManager::NativeFunctionManager() {
             return ret;
         }, game_data_type::ANY, GGameDataNativeFunction_GDType);
 
-        static auto nativeFunctionCallBinary = client::host::register_sqf_command("call"sv, "Native Function call"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+        static auto nativeFunctionCallBinary = client::host::register_sqf_command("call"sv, "Native Function call"sv, [](game_state&, game_value_parameter left, game_value_parameter right) -> game_value {
             game_value profScope = GNativeFunctionManager.profilerInterface ?
                 GNativeFunctionManager.profilerInterface->createScope(static_cast<GameDataNativeFunction*>(right.data.get())->name + " NF"sv) : game_value();
             
@@ -111,7 +111,7 @@ NativeFunctionManager::NativeFunctionManager() {
             return ret;
         }, game_data_type::ANY, game_data_type::ANY, GGameDataNativeFunction_GDType);
 
-        static auto nativeFunctionSpawnUnary = client::host::register_sqf_command("spawn"sv, "Native Function spawn"sv, [](uintptr_t, game_value_parameter right) -> game_value {
+        static auto nativeFunctionSpawnUnary = client::host::register_sqf_command("spawn"sv, "Native Function spawn"sv, [](game_state&, game_value_parameter right) -> game_value {
             game_value profScope = GNativeFunctionManager.profilerInterface ?
                 GNativeFunctionManager.profilerInterface->createScope(static_cast<GameDataNativeFunction*>(right.data.get())->name + " NF"sv) : game_value();
             
@@ -122,7 +122,7 @@ NativeFunctionManager::NativeFunctionManager() {
             return ret;
         }, game_data_type::ANY, GGameDataNativeFunction_GDType);
 
-        static auto nativeFunctionSpawnBinary = client::host::register_sqf_command("spawn"sv, "Native Function spawn"sv, [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+        static auto nativeFunctionSpawnBinary = client::host::register_sqf_command("spawn"sv, "Native Function spawn"sv, [](game_state&, game_value_parameter left, game_value_parameter right) -> game_value {
             game_value profScope = GNativeFunctionManager.profilerInterface ?
                 GNativeFunctionManager.profilerInterface->createScope(static_cast<GameDataNativeFunction*>(right.data.get())->name + " NF"sv) : game_value();
             

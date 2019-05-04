@@ -4,7 +4,7 @@
 #include "Common/CapabilityManager.hpp"
 
 int intercept::api_version() {
-    return 1;
+    return INTERCEPT_SDK_API_VERSION;
 }
 InputHandler inputHandler;
 void  intercept::on_frame() {

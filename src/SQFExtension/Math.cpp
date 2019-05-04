@@ -6,7 +6,7 @@ using namespace intercept::client;
 using namespace SQFExtensions;
 
 
-game_value caternaryFunc(uintptr_t, game_value_parameter right) {
+game_value caternaryFunc(game_state&, game_value_parameter right) {
     #ifndef __linux__
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
@@ -152,39 +152,39 @@ game_value caternaryFunc(uintptr_t, game_value_parameter right) {
 
 void Math::preStart() {
 
-    static auto _sinh = host::register_sqf_command("sinh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
+    static auto _sinh = host::register_sqf_command("sinh"sv, ""sv, [](game_state&, game_value_parameter right) -> game_value {
         return std::sinh(static_cast<float>(right));
     }, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _cosh = host::register_sqf_command("cosh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
+    static auto _cosh = host::register_sqf_command("cosh"sv, ""sv, [](game_state&, game_value_parameter right) -> game_value {
         return std::cosh(static_cast<float>(right));
     }, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _tanh = host::register_sqf_command("tanh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
+    static auto _tanh = host::register_sqf_command("tanh"sv, ""sv, [](game_state&, game_value_parameter right) -> game_value {
         return std::tanh(static_cast<float>(right));
     }, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _asinh = host::register_sqf_command("asinh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
+    static auto _asinh = host::register_sqf_command("asinh"sv, ""sv, [](game_state&, game_value_parameter right) -> game_value {
         return std::asinh(static_cast<float>(right));
     }, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _acosh = host::register_sqf_command("acosh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
+    static auto _acosh = host::register_sqf_command("acosh"sv, ""sv, [](game_state&, game_value_parameter right) -> game_value {
         return std::acosh(static_cast<float>(right));
     }, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _atanh = host::register_sqf_command("atanh"sv, ""sv, [](uintptr_t, game_value_parameter right) -> game_value {
+    static auto _atanh = host::register_sqf_command("atanh"sv, ""sv, [](game_state&, game_value_parameter right) -> game_value {
         return std::atanh(static_cast<float>(right));
     }, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _naturalLog = intercept::client::host::register_sqf_command("ln", "", [](uintptr_t, game_value_parameter right) -> game_value {
+    static auto _naturalLog = intercept::client::host::register_sqf_command("ln", "", [](game_state&, game_value_parameter right) -> game_value {
         return std::log(static_cast<float>(right));
     }, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _nthRoot = intercept::client::host::register_sqf_command("root", "", [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+    static auto _nthRoot = intercept::client::host::register_sqf_command("root", "", [](game_state&, game_value_parameter left, game_value_parameter right) -> game_value {
         return std::pow(static_cast<float>(right), 1.0f / static_cast<float>(left));
     }, game_data_type::SCALAR, game_data_type::SCALAR, game_data_type::SCALAR);
 
-    static auto _logn = intercept::client::host::register_sqf_command("log", "", [](uintptr_t, game_value_parameter left, game_value_parameter right) -> game_value {
+    static auto _logn = intercept::client::host::register_sqf_command("log", "", [](game_state&, game_value_parameter left, game_value_parameter right) -> game_value {
         return std::log(static_cast<float>(right)) / std::log(static_cast<float>(left));
     }, game_data_type::SCALAR, game_data_type::SCALAR, game_data_type::SCALAR);
 
