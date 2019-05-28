@@ -338,9 +338,8 @@ game_value FastForEach(game_state&, SQFPar left, SQFPar right) {
 
 
     //Insert instruction to set _x
-    ref<GameInstructionSetLVar> curElInstruction = rv_allocator<GameInstructionSetLVar>::create_single();
+    ref<GameInstructionSetLVar> curElInstruction = new GameInstructionSetLVar();
     curElInstruction->vName = "_x";
-    auto oldInstructions = bodyCode->instructions;
 
     bodyCode->instructions.insert(bodyCode->instructions.begin(), curElInstruction);
 
@@ -349,7 +348,7 @@ game_value FastForEach(game_state&, SQFPar left, SQFPar right) {
         sqf::call(right);
     }
 
-    bodyCode->instructions = oldInstructions;
+    bodyCode->instructions.erase(bodyCode->instructions.begin());
 
     return {};
 }
