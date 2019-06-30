@@ -6,6 +6,7 @@
 #include <csignal>
 #include <regex>
 #include <sstream>
+#include <numeric>
 
 #ifdef __linux__
 #include <dlfcn.h>
@@ -820,5 +821,83 @@ void Utility::preStart() {
         binarySearch, game_data_type::STRING, game_data_type::ARRAY, game_data_type::STRING);
     static auto _binarySearch_number = host::register_sqf_command("binaryFind", "Array needs to be presorted ascending order",
         binarySearch, game_data_type::SCALAR, game_data_type::ARRAY, game_data_type::SCALAR);
+
+
+
+
+
+
+
+    static auto _stringReplac = host::register_sqf_command("replace"sv, ""sv, [](game_state&, SQFPar left, SQFPar right) -> game_value {
+
+        r_string haystack = left;
+        auto& arguments = right.to_array();
+        std::vector<std::pair<r_string, r_string>> stringsToReplace;
+
+
+        if (arguments[0].type_enum() == game_data_type::ARRAY) {
+            for (auto& it : arguments) {
+                if (it.size() != 2) continue;
+                auto& needle = it.to_array()[0];
+                auto& replace = it.to_array()[1];
+
+                stringsToReplace.emplace_back(needle, replace);
+            }
+        } else {
+            if (arguments.size() != 2) return {};
+            auto& needle = arguments[0];
+            auto& replace = arguments[1];
+
+            stringsToReplace.emplace_back(needle, replace);
+        }
+
+        struct replacement {
+            size_t offsetFromStart;
+            r_string source;
+            r_string target;
+
+            [[nodiscard]] int getLengthChange() const {
+                return target.length() - source.length();
+            }
+        };
+
+        std::vector<replacement> replacements;
+
+        for (auto& it : stringsToReplace) {
+            size_t offset = 0;
+            while (true) {
+                auto found = haystack.find(it.first, offset);
+                offset = found + 1;
+                if (found == -1) break;
+                replacements.emplace_back(replacement{ found, it.first, it.second });
+            }
+        }
+
+        std::sort(replacements.begin(), replacements.end(), [](const replacement& l, replacement& r) {
+            return l.offsetFromStart < r.offsetFromStart;
+        });
+
+
+        size_t targetLength = haystack.length() + std::transform_reduce(replacements.begin(), replacements.end(), 0, std::plus<int>(), [](const replacement& r) {
+                return r.getLengthChange();
+        });
+
+        std::string output;
+        output.reserve(targetLength);
+
+
+        size_t curInputPos = 0;
+        size_t addOffs = 0;
+        for (auto& it : replacements) {
+            output.append(haystack.substr(curInputPos, it.offsetFromStart - curInputPos));
+            curInputPos += it.offsetFromStart - curInputPos + it.source.length();
+            output.append(it.target);
+        }
+        output.append(haystack.substr(curInputPos, haystack.length()-curInputPos));
+
+        return output;
+        }, game_data_type::STRING, game_data_type::STRING, game_data_type::ARRAY);
+
+
 
 }

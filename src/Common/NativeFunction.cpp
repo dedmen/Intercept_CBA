@@ -28,8 +28,8 @@ static game_data_type GGameDataNativeFunction_GDType;
 class GameDataNativeFunction : public game_data {
 public:
     GameDataNativeFunction() {}
-    GameDataNativeFunction(const GameDataNativeFunction& other) : name(other.name), func(other.func) {}
-    GameDataNativeFunction(r_string&& name_, NativeFunctionManager::functionType&& func_) : name(name_), func(func_) {}
+    GameDataNativeFunction(const GameDataNativeFunction& other) : name(other.name), scopeName(other.name + " NF"sv), func(other.func) {}
+    GameDataNativeFunction(r_string&& name_, NativeFunctionManager::functionType&& func_) : name(name_), scopeName(name_ + " NF"sv), func(func_) {}
     void lastRefDeleted() const override { delete this; }
     const sqf_script_type& type() const override { return GameDataNativeFunction_type; }
     ~GameDataNativeFunction() override {};
@@ -51,7 +51,7 @@ public:
 
     serialization_return serialize(param_archive& ar) override {
         game_data::serialize(ar);
-        ar.serialize("FunctionName"sv, name, 1);
+        ar.serialize("FunctionName"sv, name, 1); //#TODO scopeName
         if (!ar._isExporting) {
             func = GNativeFunctionManager.getFunc(name);
         }
@@ -61,6 +61,7 @@ public:
     bool get_final() const override { return true; }
 
     r_string name;
+    r_string scopeName;
     NativeFunctionManager::functionType func;
 };
 
@@ -91,7 +92,7 @@ NativeFunctionManager::NativeFunctionManager() {
 
         static auto nativeFunctionCallUnary = client::host::register_sqf_command("call"sv, "Native Function call"sv, [](game_state&,game_value_parameter right) -> game_value {
             game_value profScope = GNativeFunctionManager.profilerInterface ? 
-                GNativeFunctionManager.profilerInterface->createScope(static_cast<GameDataNativeFunction*>(right.data.get())->name + " NF"sv) : game_value();
+                GNativeFunctionManager.profilerInterface->createScope(static_cast<GameDataNativeFunction*>(right.data.get())->scopeName ) : game_value();
             
             game_value ret;
             if (right.data && right.data->type() == GameDataNativeFunction_type)
@@ -102,7 +103,7 @@ NativeFunctionManager::NativeFunctionManager() {
 
         static auto nativeFunctionCallBinary = client::host::register_sqf_command("call"sv, "Native Function call"sv, [](game_state&, game_value_parameter left, game_value_parameter right) -> game_value {
             game_value profScope = GNativeFunctionManager.profilerInterface ?
-                GNativeFunctionManager.profilerInterface->createScope(static_cast<GameDataNativeFunction*>(right.data.get())->name + " NF"sv) : game_value();
+                GNativeFunctionManager.profilerInterface->createScope(static_cast<GameDataNativeFunction*>(right.data.get())->scopeName) : game_value();
             
             game_value ret;
             if (right.data && right.data->type() == GameDataNativeFunction_type)
@@ -111,9 +112,10 @@ NativeFunctionManager::NativeFunctionManager() {
             return ret;
         }, game_data_type::ANY, game_data_type::ANY, GGameDataNativeFunction_GDType);
 
+        //#TODO spawnUnary doesn't exist
         static auto nativeFunctionSpawnUnary = client::host::register_sqf_command("spawn"sv, "Native Function spawn"sv, [](game_state&, game_value_parameter right) -> game_value {
             game_value profScope = GNativeFunctionManager.profilerInterface ?
-                GNativeFunctionManager.profilerInterface->createScope(static_cast<GameDataNativeFunction*>(right.data.get())->name + " NF"sv) : game_value();
+                GNativeFunctionManager.profilerInterface->createScope(static_cast<GameDataNativeFunction*>(right.data.get())->scopeName) : game_value();
             
             game_value ret;
             if (right.data && right.data->type() == GameDataNativeFunction_type)
@@ -124,7 +126,7 @@ NativeFunctionManager::NativeFunctionManager() {
 
         static auto nativeFunctionSpawnBinary = client::host::register_sqf_command("spawn"sv, "Native Function spawn"sv, [](game_state&, game_value_parameter left, game_value_parameter right) -> game_value {
             game_value profScope = GNativeFunctionManager.profilerInterface ?
-                GNativeFunctionManager.profilerInterface->createScope(static_cast<GameDataNativeFunction*>(right.data.get())->name + " NF"sv) : game_value();
+                GNativeFunctionManager.profilerInterface->createScope(static_cast<GameDataNativeFunction*>(right.data.get())->scopeName) : game_value();
             
             game_value ret;
             if (right.data && right.data->type() == GameDataNativeFunction_type)
