@@ -357,6 +357,12 @@ game_value FastForEach(game_state&, SQFPar left, SQFPar right) {
 #ifndef __linux__
 
 #pragma optimize( "gts", off )
+
+
+#pragma warning( push )
+#pragma warning( disable : 4172) //returning temporary
+
+
 #ifdef _MSC_VER
 __declspec(noinline)
 #endif
@@ -366,6 +372,8 @@ uintptr_t surfaceTexture_callST(SQFPar right) {
     stackBuf[211] = 13;
     return reinterpret_cast<uintptr_t>(&stackBuf[511]);
 }
+
+#pragma warning( pop ) 
 
 uintptr_t surfaceTexture_TestOffs(void* armaBase,uintptr_t stackBase, uint32_t i, const char*& rawName) {
 
